@@ -1,5 +1,5 @@
 ---
-title: "How I Built [jcall.engineer](https://jcall.engineer)"
+title: "How I Built jcall.engineer"
 date: 2025-03-28
 draft: true
 author: "John Call"
@@ -23,9 +23,9 @@ These services not only offer the performance I need today but also ensure I can
 
 ---
 
-## Choosing a Tech-stack
+# Choosing a Tech-stack
 
-### Domain Registration
+## Domain Registration
 I knew I wanted the domain `jcall.engineer`. When I went to purchase it from Google Domains, I discovered that Google Domains had been bought by Squarespace (what Google **selling** not **buying**?).
 
 After evaluating my options, I chose Cloudflare because:
@@ -36,7 +36,7 @@ After evaluating my options, I chose Cloudflare because:
 
 This combination of **value**, **security**, and **simplicity** made Cloudflare the clear choice for me — particularly because their predictable pricing and robust security features offer **long-term stability** and **flexibility for potential growth**. I pay $27.18 annually which works out to about $2.27 per month.
 
-### Hosting
+## Hosting
 I had previously hosted on Linode but I wanted to reevaluate modern options. While Linode is very affordable, and I have no complaint about the boxes they offered, I have been frustated in the past with their confiuration options "outside the box" (such as port forwarding). I vaguely remember being frustrated contacting their support because I couldn't figure out how to do basic things with thier web interface, but the details are long forggoten.
 
 I arrived at DigitalOcean becuase
@@ -73,5 +73,5 @@ For now, one droplet in San Fransisco using the basic hardware is fine — but h
 
 ---
 
-### Content
+## Content
 
