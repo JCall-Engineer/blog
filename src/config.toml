@@ -1,0 +1,9 @@
+baseURL = "https://blog.jcall.engineer/"
+languageCode = "en-us"
+title = "John Call's Blog"
+theme = "ananke"  # Change this if you're using a different theme
+
+[params]
+  description = "This is my blog about engineering, projects, and thoughts."
+  author = "John Call"
+
