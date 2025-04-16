@@ -1,6 +1,6 @@
 ---
 title: "How I Built jcall.engineer"
-date: 2025-03-28
+date: 2025-04-15
 draft: true
 author: "John Call"
 tags: ["core values", "technical"]
