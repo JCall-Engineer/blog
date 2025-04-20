@@ -1,65 +1,64 @@
 ---
 title: "How I Built jcall.engineer"
-date: 2025-04-15
+date: 2025-04-20
 draft: true
 author: "John Call"
-tags: ["core values", "technical"]
+edited: "https://github.com/JCall-Engineer/blog/commits/main/src/2025/04//building-my-website.md"
+tags: ["programming"]
 ---
+## Design Philosophy
 
-# Core Values
+This site isn’t powered by a marketing department chasing engagement metrics — it’s something I built to reflect how I think and work. I don’t develop websites professionally, but I’ve done my best to follow best practices for performance, security, and accessibility. That honesty matters more to me than polish.
 
-I value **control**, **flexibility**, and **modularity**, all while keeping an eye on my budget. This website reflects my commitment to maintaining a high standard of ethics — **transparency**, **rigor**, and **clarity** — in both my work and the approach I take to building this online presence.
+I like building things myself, even when it doesn’t make sense — but I try to have the discipline to reign that in when a good existing solution exists. Whenever possible, I start with existing tools. When they don’t hold up, I allow myself to build something better to get the results I need. That process led to a modular, scalable system that I understand fully and can adapt over time.
 
-These values aren’t just abstract concepts; they guide every decision I make. When choosing the tools and services to build my site, I considered how well they would align with these principles. I wanted a tech stack that would be both **affordable** and **scalable**, allowing me to grow and adapt over time without compromising on security or performance. And I wanted my content to be transparent in its presentation with a clear version history so I can be held accountable for my writing.
+The stack behind this site wasn’t chosen at random — each tool was selected with intention — not just to solve a problem, but to fit into a system I could reason about, scale, and trust. For a tool to be useful in my ecosystem, it needs to have a clear scope, handle edge cases rigorously, and avoid becoming a black box. I want to be able to reason about its behavior, swap it out cleanly, and integrate it without distortion.
 
-Here’s how I selected my tech stack:
+I plan to write more about the black box problem in a future post, but the short version is this: if a tool’s internals are hidden and I’m expected to trust its outputs, then it absolutely must deliver. Too often I’m handed black boxes that don’t work as advertised — and when they fail, I’m left with fewer options for solving the problem than if I had just built the damn thing myself.
 
- - `Cloudflare` for security and domain management
- - `DigitalOcean` for flexible hosting
- - `Let's Encrypt` for secure SSL certificates which improve **trust**
- - `Nginx` for web server performance and **modularity**
- - `GitHub` for version control providing revision **transparency**
- - `Hugo` for static site generation using markdown syntax which is *git-friendly* and **flexible**
+That’s what makes the whole system robust and maintainable — and why I can expect it to hold up over time.
 
-These services not only offer the performance I need today but also ensure I can grow and scale my project in the future, with a modular design that allows me to swap out individual components as needed — all while maintaining the values I hold dear.
+Here’s what I ended up with:
+ - **Cloudflare** — handles DNS, DDoS protection, and domain registration, all at cost.
+ - **DigitalOcean** — provides a flexible VPS I can scale and customize.
+ - **Let's Encrypt** — issues free SSL certificates to enable secure HTTPS
+ - **Nginx** — serves content with performance and configuration flexibility
+ - **Express.js** — handles dynamic assembly of HTML content using a lightweight Node.js framework.
+ - **markdown-it (Python)** — powers the static site generator that converts Markdown to HTML with minimal tooling.
+ - **Custom bash scripts** — orchestrate my development flow, manage versioning, and allow me to roll back to previous builds when needed.
+
+> Note: I also publish all markdown source files on GitHub, so the complete version history of each blog post is public and transparent. Scroll to the bottom of this blog post to see an example of how that will show up.
 
 ---
-
-# Choosing a Tech-stack
 
 ## Domain Registration
-
-I knew I wanted the domain `jcall.engineer`. When I went to purchase it from Google Domains, I discovered that Google Domains had been bought by Squarespace (what Google **selling** not **buying**?).
+I knew I wanted the domain `jcall.engineer`. When I went to purchase it from Google Domains, I discovered they had been bought out by Squarespace — which surprised me (Google **selling**, not **buying**?).
 
 After evaluating my options, I chose Cloudflare because:
-
  - They sell domains *at cost* with no renewal upcharges.
- - Their DNS management is top-notch.
- - They offer built-in DDoS protection via their free proxy service.
- - The *convenience* of managing both DDoS protection and domain registration on one platform was appealing.
+ - Their DNS management is best-in-class.
+ - Built-in DDoS protection comes free via their proxy layer.
+ - Managing both DNS and DDoS from a single platform made things simpler.
 
-This combination of **value**, **security**, and **simplicity** made Cloudflare the clear choice for me — particularly because their predictable pricing and robust security features offer **long-term stability** and **flexibility for potential growth**. I pay $27.18 annually which works out to about $2.27 per month.
+That combination of **value**, **security**, and **convenience** made Cloudflare an easy choice — especially with their predictable pricing and strong feature set. I pay $27.18 annually, which comes out to about $2.27/month.
 
-## Hosting
+## VM Hosting
+I had previously hosted on Linode but I wanted to reevaluate modern options. While Linode is very affordable, and I have no complaints about the boxes they offer, I have been frustrated with how limited their interface was for things like port forwarding. I vaguely recall having to contact support because I couldn't figure out how to do basic things with their web interface, but the details are long forgotten.
 
-I had previously hosted on Linode but I wanted to reevaluate modern options. While Linode is very affordable, and I have no complaint about the boxes they offered, I have been frustated in the past with their confiuration options "outside the box" (such as port forwarding). I vaguely remember being frustrated contacting their support because I couldn't figure out how to do basic things with thier web interface, but the details are long forggoten.
-
-I arrived at DigitalOcean becuase
-
+I ended up choosing DigitalOcean because
  - Most importantly: they are affordable. $6 per month affords me
    - 1 GB RAM
    - 25 GB of SSD storage
-   - 1 TB of network tranfer per month
- - They have **flexibility** in infrasturcutre that would allow me to easily scale to a higher performance environment
-   - You are given a virtual machine that can be swapped out to different hardware trivially
-     - Need more RAM?
-     - Need a better CPU?
-     - Need more storage?
-     - Need a second machine to balance the network load?
-     - All of these can be upgraded **separately** *as needed*
+   - 1 TB of network transfer per month
+ - They have **flexibility** in infrastructure that would allow me to easily scale to a higher performance environment
+   - You can upgrade individual components as needed
+     - More RAM
+     - A faster CPU
+     - Extra storage
+     - A second machine for load balancing
    - You can ensure faster load times and lower latency for users, no matter where they are — DigitalOcean offers 9 global regions
      - New York
-     - San Franscisco
+     - San Francisco
      - Amsterdam
      - Singapore
      - London
@@ -68,15 +67,16 @@ I arrived at DigitalOcean becuase
      - Bangalore
      - Sydney
 
-For now, one droplet in San Fransisco using the basic hardware is fine — but having the **option** to scale up is a big plus. I have a VM that I have **full control** over so I can *experiment* with new technologies that better fit my needs.
+For now, one droplet in San Francisco using the basic hardware is fine — but having the **option** to scale up is a big plus. I have a VM that I have **full control** over so I can *experiment* freely and evolve the system as my needs change.
 
-#### Out of pocket
-
+#### Out of pocket expenses
 | Service      | Annual | Monthly | Notes |
 |--------------|--------|---------|-------|
 | Cloudflare   | $27.18 | $2.27   | Domain Registration, DNS management, DDoS protection, caching optimizations, other security perks |
 | DigitalOcean | $72    | $6      | Hosting with flexibility for upscaling deployment if needed |
-| Total        | $99.18 | $8.27   | Montly cost is an estimate due to annual billing from cloudflare |
+| Total        | $99.18 | $8.27   | Monthly cost is an estimate due to annual billing from Cloudflare |
+
+Everything else you see on this website is made by myself or using free open source tools
 
 ---
 
