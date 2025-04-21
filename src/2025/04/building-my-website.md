@@ -80,5 +80,59 @@ Everything else you see on this website is made by myself or using free open sou
 
 ---
 
-## Content
+## The Scripts Behind jcall.engineer
 
+### Introduction: Why I Wrote My Own Dev Infrastructure
+- Quick recap: this site reflects how I build things — transparent, modular, controlled
+- Why off-the-shelf tools didn’t cut it (just a sentence or two)
+- What this post will cover: the glue scripts and infrastructure that make this site work
+
+### `utils.sh`: Small Script, Big Leverage
+- Logging helpers: `log_info`, `log_success`, etc.
+- Safe execution: dry run support with `--no-exec` via `run` wrapper
+- YAML helpers for accessing and modifying `environment.yml`
+
+### `domains.sh`: Fully Scripted Domain + SSL Management
+- One script to register, renew, and remove domains
+- Automatically disables and re-enables Cloudflare proxy for cert issuance
+- Everything pulled from `environment.yml` — no need to touch `.bashrc`
+- CLI-style breakdown: `register`, `renew`, `remove`, `proxy`, `list`
+
+### `ship.sh`: The Brain of the Production Pipeline
+- One CLI for build, link, deploy, and test across all projects
+- Supports versioning (`--version`, `--draft`, `--publish`)
+- Drafts and publishes to `/deploy/out/[project]/[version]/[publish|draft]`
+- Symlink management for `/var/www` and `/etc/nginx`
+
+### `markdown_translator.py`: Clean Markdown-to-HTML with LaTeX Support
+- 240 lines of processing logic
+- 220 lines of CLI and yq-based metadata handling
+- Over 1200 lines of unit tests
+- Supports math rendering, attribute parsing, and smart typographer output
+
+### Template System: HTML Injection via Express
+- `index.html`, `blog/index.html`, and `blog/post.html` define core layout
+- Express dynamically assembles full pages by injecting HTML fragments into templates
+- Static site-like performance with dynamic routing flexibility
+- Build step controls what content appears — no SPA framework required
+
+### System Services + Web Server Routing
+- Ubuntu systemd unit keeps Express alive
+- Nginx routes subdomains and forwards requests to Express
+- Clean separation of static and dynamic content
+
+### Looking Forward: Features, Projects, and Writing Plans
+
+- I already have **rich LaTeX support**, and I’m excited to finally put it to use. Expect to see things like Sobel filter matrices, set theory notation, or even a well-placed differential equation — because why not show it off?
+- I plan to host and document open-source projects here, starting with **Pixonomy**, a FOSS image tagging and management tool designed for flexibility and offline control.
+- I also want to start writing more educational content, including:
+  - How to use Git (beyond just memorizing commands)
+  - Introductory Makefile usage
+  - Foundational programming knowledge — tracing from transistors to C++
+- You’ll likely see occasional **policy advocacy posts** — particularly around issues like medical patents or copyright — but I want those to be as **party-agnostic** as possible. I’m not interested in tribal debate. I’m interested in identifying practical reforms that people across the spectrum could agree on.
+- And beyond that? Whatever holds my interest. I want this site to grow *with me* — evolving alongside the projects, tools, and ideas I care most about.
+
+### Conclusion: Why I Went This Route
+- What it’s like to work in this environment now
+- Would I recommend it? Who should (and shouldn’t) do the same
+- Link to GitHub if you’re open to sharing scripts
