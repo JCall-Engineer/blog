@@ -4,7 +4,7 @@ date: 2025-06-14
 draft: true
 author: "John Call"
 edited: "https://github.com/JCall-Engineer/blog/commits/main/src/post/2025/06/why-i-built-this-site.md"
-tags: ["philosophy", "blogging", "version-control", "transparency"]
+tags: []
 ---
 
 ## A Letter Sparked This Site
