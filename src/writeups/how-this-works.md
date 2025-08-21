@@ -3,8 +3,8 @@ title: "How I Built jcall.engineer"
 date: 2025-04-20
 draft: true
 author: "John Call"
-edited: "https://github.com/JCall-Engineer/blog/commits/main/src/post/2025/04/building-my-website.md"
-tags: ["programming"]
+edited: "https://github.com/JCall-Engineer/blog/commits/main/src/writeups/how-this-works.md"
+tags: []
 ---
 ## Design Philosophy
 
