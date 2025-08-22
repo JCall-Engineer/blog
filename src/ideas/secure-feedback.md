@@ -1,3 +1,9 @@
+---
+title: "Designing for Trust in a Hostile Workplace"
+tags: ["software", "projects"]
+draft: true
+---
+
 # SecureFeedback: A Two-Way Anonymous Messaging System for Corporate Feedback
 
 ## Overview

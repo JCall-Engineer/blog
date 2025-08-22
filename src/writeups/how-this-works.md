@@ -1,10 +1,7 @@
 ---
 title: "How I Built jcall.engineer"
-date: 2025-04-20
-draft: true
-author: "John Call"
-edited: "https://github.com/JCall-Engineer/blog/commits/main/src/writeups/how-this-works.md"
 tags: []
+draft: true
 ---
 ## Design Philosophy
 

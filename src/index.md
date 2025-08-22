@@ -1,9 +1,6 @@
 ---
 title: "Why I Built This Site, and Why I'm Not Hiding It"
-date: 2025-06-14
-draft: true
 author: "John Call"
-edited: "https://github.com/JCall-Engineer/blog/commits/main/src/index.md"
 tags: []
 ---
 
