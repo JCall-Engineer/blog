@@ -1,6 +1,5 @@
 ---
 title: "Why I Built This Site, and Why I'm Not Hiding It"
-author: "John Call"
 tags: []
 ---
 
