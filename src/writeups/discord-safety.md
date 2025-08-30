@@ -1,5 +1,5 @@
 ---
 title: "Rui: The Ongoing Battle Against Scams on Discord"
-tags: []
+tags: [ projects, software ]
 draft: true
 ---

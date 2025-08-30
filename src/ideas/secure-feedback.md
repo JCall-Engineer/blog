@@ -1,6 +1,6 @@
 ---
 title: "Designing for Trust in a Hostile Workplace"
-tags: ["software", "projects"]
+tags: [ projects, software ]
 draft: true
 ---
 

@@ -1,5 +1,5 @@
 ---
 title: "Why Healthcare Needs Patent Reform"
-tags: ["civics"]
+tags: [ civics ]
 draft: true
 ---

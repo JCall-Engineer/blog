@@ -1,5 +1,5 @@
 ---
 title: "Wrestling with Intellectual Property"
-tags: ["civics"]
+tags: [ civics ]
 draft: true
 ---

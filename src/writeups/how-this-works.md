@@ -1,6 +1,6 @@
 ---
 title: "How I Built jcall.engineer"
-tags: []
+tags: [ projects, software ]
 draft: true
 ---
 ## Design Philosophy

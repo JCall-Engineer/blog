@@ -1,6 +1,6 @@
 ---
 title: "My Open Letter to Mike Lee Regarding Patents in Healthcare"
-tags: ["civics"]
+tags: [ civics ]
 date_sent: 2025-03-24
 date_received: 2025-04-10
 received_status: "attested"

@@ -1,6 +1,6 @@
 ---
 title: "Deep Research: The Cost Structure of Eliquis"
 author: "ChatGPT"
-tags: ["civics"]
+tags: [ civics ]
 draft: true
 ---
