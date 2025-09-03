@@ -23,7 +23,7 @@ This site reflects that. It gives me the freedom to revise old posts as my think
 
 That’s why I built this system by hand instead of using something like WordPress. I wanted infrastructure that lets me correct mistakes *and* acknowledge them. I don’t want to pretend I never said something---I want to document why I changed my mind.
 
-Every blog post is backed by a public GitHub repository, complete with version history and commit messages explaining every edit.
+Every blog post is hosted on a public GitHub repository, complete with version history and commit messages explaining every edit.
 
 I want readers to know these posts *will* evolve---and to trust the transparency of those changes. If you’re curious, you can see exactly what changed and why. I make revisions because I have confidence that they are improvements---and hopefully most people reading will find that to be true.
 
