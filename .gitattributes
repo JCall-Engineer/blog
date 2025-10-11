@@ -1,0 +1,14 @@
+# Set the default behavior, which will auto-detect if a file is text.
+# If a file is text, its line endings will be normalized to LF when committed.
+* text=auto
+
+# Declare files that are explicitly binary and should not be modified.
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
+*.zip binary
+
+# Override specific text file types if needed.
+# For example, to ensure shell scripts always have LF endings.
+*.sh text eol=lf
