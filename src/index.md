@@ -5,7 +5,7 @@ tags: []
 
 ## A Letter Sparked This Site
 
-In April 2025, I sent a letter to Senator Mike Lee about the state of healthcare in America. It was a letter I’d spent real time crafting---researched, structured, and deeply personal. But as I was preparing to publish it online and share it more broadly, I caught a mistake in one of my sources.
+In April 2025, I sent a letter to one of my senators about the state of healthcare in America. It was a letter I’d spent real time crafting---researched, structured, and deeply personal. But as I was preparing to publish it online and share it more broadly, I caught a mistake in one of my sources.
 
 The error was minor, but it was enough to make me pause.
 
