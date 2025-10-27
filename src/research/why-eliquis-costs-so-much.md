@@ -2,7 +2,7 @@
 title: "Deep Research: Eliquis Manufacturing Cost and Profit Margin Analysis"
 author: "ChatGPT Model 4o"
 tags: [ civics ]
-date-researched: Early March 2025
+date_researched: Early March 2025
 ---
 ## Manufacturing and Production Costs
 
