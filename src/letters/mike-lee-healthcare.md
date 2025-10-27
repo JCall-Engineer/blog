@@ -10,12 +10,12 @@ received_sources:
 ---
 March 24, 2025
 
-<address>
+<p><address>
 The Honorable Senator Mike Lee<br/>
 United States Senate<br/>
 361A Russell Senate Office Building<br/>
 Washington, D.C. 20510
-</address>
+</address><p>
 
 Re: Medical Patent Reform
 
