@@ -1,5 +1,6 @@
 ---
 title: "Medical Patent Reform (Mike Lee)"
+description: "My letter to Senator Mike Lee about medical patent reform, written after a stroke forced me to confront how pharmaceutical monopolies inflate the cost of life-saving drugs like Eliquis."
 tags: [ civics ]
 date_sent: 2025-03-24
 date_received: 2025-04-10

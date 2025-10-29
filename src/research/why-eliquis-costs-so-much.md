@@ -1,5 +1,6 @@
 ---
 title: "Deep Research: Eliquis Manufacturing Cost and Profit Margin Analysis"
+description: "Manufacturing Eliquis costs pennies per pill, yet it sells for $20+. A breakdown of where the money actually goes: marketing, patents, and profit margins that exceed 80%."
 author: "ChatGPT Model 4o"
 tags: [ civics ]
 date_researched: Early March 2025
