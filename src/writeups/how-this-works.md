@@ -103,3 +103,136 @@ Beyond the HTML bloat, I also didn't see a clear way to automate the GitHub comm
 WordPress was a non-starter for different reasons. It stores content in a database, which makes public version history a significant undertaking. The whole point was Git-based transparency --- WordPress works against that from the ground up.
 
 So I built my own pipeline instead.
+
+## Version-Controlled Deployments: Fearless Experimentation
+
+The core of my deployment system is `ship.sh` --- a bash script that automates fetching, building, and deploying website updates. It's quite lengthy, so I'll show the main structure rather than all ~600 lines.
+
+```bash
+# ────── Main ──────
+ARGS=()
+parse_common_flags ARGS "$@"
+set -- "${ARGS[@]}"
+get_flags ARGS "$@"
+set -- "${ARGS[@]}"
+
+CMD="$1"
+shift || true
+
+if [[ "$HELP" == true || "$CMD" == "help" ]]; then
+	print_help
+	exit 0
+fi
+
+PROJECTS=("$@")
+if [[ ${#PROJECTS[@]} -eq 0 || "${PROJECTS[0]}" == "all" ]]; then
+	PROJECTS=( $(yaml_get '.versions | keys | .[]') )
+fi
+
+if [[ "$SET_PRESET" == true ]]; then
+	project_iterator set_preset "$VERSION" "${MODE:-publish}"
+fi
+
+# ────── CMD Handling ──────
+case "$CMD" in
+	fetch)
+		project_iterator git_checkout "$VERSION" "both"
+		;;
+	build)
+		project_iterator project_builder "$VERSION" "${MODE:-both}"
+		;;
+	link)
+		project_iterator project_linker "$VERSION" "$MODE"
+		;;
+	full)
+		if ask_confirm "Do a git checkout?"; then
+			project_iterator git_checkout "$VERSION" "both"
+		fi
+		if ask_confirm "Rebuild the project?"; then
+			project_iterator project_builder "$VERSION" "${MODE:-both}"
+		fi
+		if ask_confirm "Update symlinks?"; then
+			project_iterator project_linker "$VERSION" "$MODE"
+		fi
+		;;
+	*)
+		log_error "Unrecognized command: '$CMD'"
+		print_help
+		exit 1
+esac
+```
+
+`ship.sh` has 3 basic tasks:
+
+- **Fetch**: Pull a specific version (tag or branch) of a project from my Git repository
+- **Build**: Copy files to a version-specific directory (*e.g.*: `/deploy/out/blog/v1.2/publish/`) and run any required processing (*e.g.*: markdown → HTML)
+- **Link**: Update a symlink (*e.g.*: `/var/www/blog`) to point at the new build
+
+My typical workflow: `./ship.sh full blog`, which runs all three steps interactively. The `project_iterator` helper applies the requested operation to each project --- or every project in `environment.yml` if I specify `all`. I use this script for all projects on my website, of which blog is just one.
+
+```bash
+jcall@jcall-engineer:/jcall.engineer/deploy$ ./ship.sh full blog
+=== ship.sh run started at Thu Oct 30 16:34:16 UTC 2025 ===
+Do a git checkout? (y/n): y
+Fetching updates from origin in blog
+From gitlab.com:jcall.engineer/public-domains/blog
+   8b5be4a..c23aeb8  main       -> origin/main
+Fetched successfully
+Checking out branch main and pulling latest changes
+Already on 'main'
+Your branch is behind 'origin/main' by 4 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+Updating 8b5be4a..c23aeb8
+Fast-forward
+ src/writeups/how-this-works.md | 232 ++++++++++++++++++-----------------------
+ 1 file changed, 101 insertions(+), 131 deletions(-)
+Branch main up to date
+Rebuild the project? (y/n): y
+[INFO] The following project will be built: blog version main[publish]
+Press any key to continue...
+Sourcing markdown files from blog
+Successfully sourced blog
+Translating markdown files
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/index.md -> /jcall.engineer/deploy/out/blog/main/publish/html/index.html
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/tags/engineering.md -> /jcall.engineer/deploy/out/blog/main/publish/html/tags/engineering.html
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/tags/education.md -> /jcall.engineer/deploy/out/blog/main/publish/html/tags/education.html
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/tags/projects.md -> /jcall.engineer/deploy/out/blog/main/publish/html/tags/projects.html
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/tags/software.md -> /jcall.engineer/deploy/out/blog/main/publish/html/tags/software.html
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/tags/civics.md -> /jcall.engineer/deploy/out/blog/main/publish/html/tags/civics.html
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/research/why-eliquis-costs-so-much.md -> /jcall.engineer/deploy/out/blog/main/publish/html/research/why-eliquis-costs-so-much.html
+Processed: /jcall.engineer/deploy/out/blog/main/publish/src/letters/mike-lee-healthcare.md -> /jcall.engineer/deploy/out/blog/main/publish/html/letters/mike-lee-healthcare.html
+Wrote map: /jcall.engineer/deploy/out/blog/main/publish/html/sitemap.json
+Metadata and Html translation successful
+[✓] Build complete for blog (version: main[publish]).
+[INFO] The following project will be built: blog version main[draft]
+Press any key to continue...
+Sourcing markdown files from blog
+Successfully sourced blog
+Translating markdown files
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/index.md -> /jcall.engineer/deploy/out/blog/main/draft/html/index.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/essays/rethinking-ip.md -> /jcall.engineer/deploy/out/blog/main/draft/html/essays/rethinking-ip.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/essays/teaching-software-right.md -> /jcall.engineer/deploy/out/blog/main/draft/html/essays/teaching-software-right.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/essays/patents-vs-patients.md -> /jcall.engineer/deploy/out/blog/main/draft/html/essays/patents-vs-patients.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/tags/engineering.md -> /jcall.engineer/deploy/out/blog/main/draft/html/tags/engineering.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/tags/education.md -> /jcall.engineer/deploy/out/blog/main/draft/html/tags/education.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/tags/projects.md -> /jcall.engineer/deploy/out/blog/main/draft/html/tags/projects.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/tags/software.md -> /jcall.engineer/deploy/out/blog/main/draft/html/tags/software.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/tags/civics.md -> /jcall.engineer/deploy/out/blog/main/draft/html/tags/civics.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/writeups/proving-bad-luck.md -> /jcall.engineer/deploy/out/blog/main/draft/html/writeups/proving-bad-luck.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/writeups/the-blackbox-problem.md -> /jcall.engineer/deploy/out/blog/main/draft/html/writeups/the-blackbox-problem.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/writeups/how-this-works.md -> /jcall.engineer/deploy/out/blog/main/draft/html/writeups/how-this-works.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/writeups/discord-safety.md -> /jcall.engineer/deploy/out/blog/main/draft/html/writeups/discord-safety.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/ideas/secure-feedback.md -> /jcall.engineer/deploy/out/blog/main/draft/html/ideas/secure-feedback.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/research/why-eliquis-costs-so-much.md -> /jcall.engineer/deploy/out/blog/main/draft/html/research/why-eliquis-costs-so-much.html
+Processed: /jcall.engineer/deploy/out/blog/main/draft/src/letters/mike-lee-healthcare.md -> /jcall.engineer/deploy/out/blog/main/draft/html/letters/mike-lee-healthcare.html
+Wrote map: /jcall.engineer/deploy/out/blog/main/draft/html/sitemap.json
+Metadata and Html translation successful
+[✓] Build complete for blog (version: main[draft]).
+Update symlinks? (y/n): n
+```
+
+This setup enables fearless experimentation:
+
+- **Instant rollback**: If an update breaks something, I can revert by re-linking to the previous build (*e.g.*: `./ship.sh link blog --version v1.1`)
+- **Independent deployments**: I can update the blog without touching other systems, or test experimental templates on a dev subdomain
+- **Fast iteration**: The build process is scoped to what changed --- updating the blog doesn't require rebuilding templates, restarting Express, or touching nginx config
