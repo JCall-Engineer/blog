@@ -37,3 +37,69 @@ If you've read [my intro post](https://jcall.engineer) you'll understand that th
 Git was the natural choice for version control. And since Git diffs work best with plain text, markdown became the obvious format for content. HTML diffs are incomprehensible at a glance, but markdown is readable by anyone --- even in raw form. It's widespread enough that people use it daily without realizing: Discord messages, Reddit comments, AI chat interfaces. For public version history (and simplicity of writing), it's perfect.
 
 Making that history accessible is simple: push the blog repo to GitHub and link to it. You can see this at the top of every post --- a direct link to the commit history for that specific file. As for turning markdown into HTML, a quick search suggests Hugo as the "natural" choice for static site generation.
+
+## Why Not Hugo or WordPress?
+
+I started with Hugo. It's fast, well-documented, and widely recommended for markdown-based sites. But it didn't take long to hit friction.
+
+Hugo is opinionated about structure --- where files go, how templates work, how HTML gets generated. That's great when you want what Hugo wants to give you. But I didn't. The online examples all pointed toward "let Hugo do the work," and the result was bloated HTML that gave me the ick. Nested `<div>` wrappers, theme-specific classes everywhere, markup I didn't ask for and couldn't easily strip out.
+
+While web development isn't my passion, I'm strongly opinionated about what makes a good website. Clean, semantic HTML matters. Here's what a blog post looks like on my site:
+
+```html
+<body>
+	<header class="noselect">
+		<nav>
+			<ul>
+				<li><a href="https://jcall.engineer">Home</a></li>
+				<li><a href="https://blog.jcall.engineer">Blog</a></li>
+				...
+			</ul>
+		</nav>
+	</header>
+	<main>
+		<aside id="blog-nav">
+			<nav aria-label="Blog Navigation">
+				<section id="blog-nav-tag">
+					<h2>Browse by Tag</h2>
+					<ul>
+						...
+					</ul>
+				</section>
+				<section id="blog-nav-recent">
+					<h2>Recent Posts</h2>
+					<ul>
+						...
+					</ul>
+				</section>
+				<a id="blog-nav-all" href="/sitemap">Browse All</a>
+			</nav>
+		</aside>
+		<section id="blog-content">
+			<article id="{{slug}}">
+				<header>
+					<h1>{{blog_title}}</h1>
+					<dl class="byline" aria-label="Post metadata">
+						...
+						<dt>Version History</dt><dd><a href="https://github.com/JCall-Engineer/blog/commits/main/src/..." target="_blank" rel="noopener noreferrer">https://github.com/JCall-Engineer/blog/commits/main/src/...</a></dd>
+					</dl>
+				</header>
+				<section>
+					The article
+				</section>
+			</article>
+		</section>
+	</main>
+	<footer class="noselect">
+		...
+	</footer>
+</body>
+```
+
+No unnecessary wrappers. No framework cruft. Just the structure the content actually needs. The `{{variables}}` you see are injection points for my templating system --- more on that later.
+
+Beyond the HTML bloat, I also didn't see a clear way to automate the GitHub commit history links I wanted on every post. I'm sure it's *possible* to extend Hugo to do that --- but at that point, you're fighting the framework instead of using it. The third-party themes added dependencies I didn't want. The templating system felt rigid. And I kept hitting walls where I'd think "I could just write this myself in 50 lines and have exactly what I want."
+
+WordPress was a non-starter for different reasons. It stores content in a database, which makes public version history a significant undertaking. The whole point was Git-based transparency --- WordPress works against that from the ground up.
+
+So I built my own pipeline instead.
