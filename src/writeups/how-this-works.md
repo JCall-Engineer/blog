@@ -236,3 +236,15 @@ This setup enables fearless experimentation:
 - **Instant rollback**: If an update breaks something, I can revert by re-linking to the previous build (*e.g.*: `./ship.sh link blog --version v1.1`)
 - **Independent deployments**: I can update the blog without touching other systems, or test experimental templates on a dev subdomain
 - **Fast iteration**: The build process is scoped to what changed --- updating the blog doesn't require rebuilding templates, restarting Express, or touching nginx config
+
+## The Markdown Pipeline: Processing Your Way
+
+## Template Composability: Three Layers Deep
+
+## The Details Matter: CSS, Themes, and Sharing
+
+## Closing the Loop: GitHub Integration
+
+## What It Costs (Money and Time)
+
+## Should You Do This?
