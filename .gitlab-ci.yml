@@ -1,13 +1,12 @@
 stages:
   - deploy
-
 deploy:
   stage: deploy
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
     - eval $(ssh-agent -s)
-    - echo "Length of base64 string: $(echo -n "$SSH_PRIVATE_KEY_B64" | wc -c)"
-    - echo "First 50 chars: $(echo "$SSH_PRIVATE_KEY_B64" | cut -c1-50)"
+    - 'echo "Length of base64 string: $(echo -n "$SSH_PRIVATE_KEY_B64" | wc -c)"'
+    - 'echo "First 50 chars: $(echo "$SSH_PRIVATE_KEY_B64" | cut -c1-50)"'
     - printf "%s" "$SSH_PRIVATE_KEY_B64" | base64 -d > /tmp/ssh_key
     - chmod 600 /tmp/ssh_key
     - ssh-add /tmp/ssh_key
