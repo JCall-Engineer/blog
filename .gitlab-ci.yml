@@ -6,7 +6,7 @@ deploy:
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
     - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY_B64" | base64 -d > /tmp/ssh_key
+    - printf "%s" "$SSH_PRIVATE_KEY_B64" | base64 -d > /tmp/ssh_key
     - chmod 600 /tmp/ssh_key
     - ssh-add /tmp/ssh_key
     - mkdir -p ~/.ssh
