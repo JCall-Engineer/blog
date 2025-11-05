@@ -15,9 +15,9 @@ deploy:
   script:
     - |
       if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
-        ssh $SSH_USER@$SSH_HOST "eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && cd /jcall.engineer/deploy && sudo -u jcall ./ship.sh blog --fetch --build --yes"
+        ssh $SSH_USER@$SSH_HOST "source /home/gitlab-ci/setup_pyenv.sh && eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && cd /jcall.engineer/deploy && sudo -E -u jcall ./ship.sh blog --fetch --build --yes"
       else
-        ssh $SSH_USER@$SSH_HOST "eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && cd /jcall.engineer/deploy && sudo -u jcall ./ship.sh blog --fetch -v $CI_COMMIT_REF_NAME --build --yes"
+        ssh $SSH_USER@$SSH_HOST "source /home/gitlab-ci/setup_pyenv.sh && eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && cd /jcall.engineer/deploy && sudo -E -u jcall ./ship.sh blog --fetch -v $CI_COMMIT_REF_NAME --build --yes"
       fi
     - ssh $SSH_USER@$SSH_HOST "eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && cd /jcall.engineer/blog && git push github $CI_COMMIT_REF_NAME"
   only:
