@@ -1,13 +1,24 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-- test
-sast:
-  stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
+	- deploy
+
+deploy:
+	stage: deploy
+	before_script:
+		- 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+		- eval $(ssh-agent -s)
+		- ssh-add "$SSH_PRIVATE_KEY"
+		- mkdir -p ~/.ssh
+		- chmod 700 ~/.ssh
+		- ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+		- chmod 644 ~/.ssh/known_hosts
+	script:
+		- |
+			if [ "$CI_COMMIT_REF_NAME" = "main" ]; then
+				ssh $SSH_USER@$SSH_HOST "eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && sudo -u jcall /jcall.engineer/deploy/ship.sh blog --fetch --build --yes"
+			else
+				ssh $SSH_USER@$SSH_HOST "eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && sudo -u jcall /jcall.engineer/deploy/ship.sh blog --fetch -v $CI_COMMIT_REF_NAME --build --yes"
+			fi
+		- ssh $SSH_USER@$SSH_HOST "eval \$(ssh-agent -s) && ssh-add ~/.ssh/id_ed25519 && cd /jcall.engineer/blog && git push github $CI_COMMIT_REF_NAME"
+	only:
+		- branches
+		- tags
