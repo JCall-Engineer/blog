@@ -235,6 +235,55 @@ This setup enables fearless experimentation:
 
 ## The Markdown Pipeline: Processing Your Way
 
+I started working on this website back in April of 2025. My first approach was to try Hugo: a static site generator that translates markdown content into a complete static site. As of writing this it is now more than half a year later, so there may be some inaccuracy in my recollection of how Hugo worked. But the problems I remember having were:
+
+- I didn't agree with how Hugo composed HTML documents (`<div>` wrappers everywhere)
+- Theming and layout adjustments were rigid
+- No clear way to inject the GitHub commit history links I wanted
+
+So I wrote a small Python script (~200 lines of logic + 300 lines of supporting structure, 1200 lines of unit tests) that was structure-agnostic, tightly scoped, and did its job well. Here's what it does:
+
+```bash
+usage: markdown_translator.py [-h] [-d INPUT_DIR] [-f INPUT_FILE]
+       [-@ RELATIVE_ROOT] [-m MAP] [-o OUTPUT] [--draft] [--unit-tests]
+       [--dry-run] [--flatten-output] [--force]
+
+Markdown to HTML partial converter
+
+options:
+  -d, --input-dir       Path to directory of markdown files (recursive)
+  -f, --input-file      Individual markdown file to process
+  -@, --relative-root   Base path to compute relative output paths from
+  -m, --map             Output a json map/summary of generated files
+  -o, --output          Output directory (filenames from slug or source name)
+  --draft               Include files with "draft: true" in frontmatter
+  --dry-run             Print output paths without writing files
+  --flatten-output      Ignore input tree structure
+  --force               Allow overwriting existing files
+```
+
+The tool is intentionally "dumb" --- it doesn't care about your site structure, it just mirrors your input tree and translates what you tell it to where you tell it to. In practice, `ship.sh` calls it like this:
+
+```bash
+python markdown_translator.py \
+	-d "$dir/src" \
+	-o "$dir/html" \
+	-m "$dir/html/sitemap.json" \
+	--force
+```
+
+When `-d` is the only input source, the script automatically treats it as the relative root --- preserving the directory structure from that point. So `src/writeups/how-this-works.md` becomes `html/writeups/how-this-works.html`. The `--draft` flag gets added conditionally when building the draft version of the site (you saw this in the `ship.sh` output earlier --- it builds both `main[publish]` and `main[draft]`).
+
+The script handles the hard parts --- markdown to HTML via `markdown-it`, LaTeX rendering via `KaTeX`, and frontmatter extraction via `yq` --- and leaves the easy parts (site composition, navigation, templating) to other processes. For each markdown file, it outputs:
+
+- `.html` - The translated content (just the article body, no site chrome)
+- `.json` - The extracted metadata (title, tags, dates, slug)
+- `sitemap.json` - A hierarchical manifest of all processed files
+
+That sitemap becomes critical in the next step: template composition. The markdown translator doesn't know or care about your site's header, footer, or navigation --- it just gives you clean HTML partials and the metadata needed to build those things elsewhere.
+
+This separation of concerns is what makes the system maintainable. The markdown translator has one job, does it well, and never needs to change unless markdown itself changes. Everything else --- how pages get assembled, styled, or served --- lives in different, independently versioned components.
+
 ## Template Composability: Three Layers Deep
 
 ## The Details Matter: CSS, Themes, and Sharing
