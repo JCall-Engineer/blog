@@ -161,7 +161,7 @@ fi
 `ship.sh` has 3 basic tasks:
 
 - **Fetch**: Pull a specific version (tag or branch) of a project from my Git repository
-- **Build**: Copy files to a version-specific directory (*e.g.*: `/deploy/out/blog/v1.2/publish/`) and run any required processing (*e.g.*: markdown → HTML)
+- **Build**: Copy files to a version-specific directory (*e.g.*: `/deploy/out/blog/v1.2/publish/`) and run any required processing (*e.g.*: markdown <span aria-label="to">→</span> HTML)
 - **Link**: Update a symlink (*e.g.*: `/var/www/blog`) to point at the new build
 
 My typical workflow: `./ship.sh blog --full`, which runs all three steps interactively. The `project_iterator` helper applies the requested operation to each project --- or every project in `environment.yml` if I specify `all`. I use this script for all projects on my website, of which blog is just one.
@@ -274,7 +274,7 @@ python markdown_translator.py \
 
 When `-d` is the only input source, the script automatically treats it as the relative root --- preserving the directory structure from that point. So `src/writeups/how-this-works.md` becomes `html/writeups/how-this-works.html`. The `--draft` flag gets added conditionally when building the draft version of the site (you saw this in the `ship.sh` output earlier --- it builds both `main[publish]` and `main[draft]`).
 
-The script handles the hard parts --- markdown to HTML via `markdown-it`, LaTeX rendering via `KaTeX`, and frontmatter extraction via `yq` --- and leaves the easy parts (site composition, navigation, templating) to other processes. For each markdown file, it outputs:
+The script handles the hard parts --- markdown <span aria-label="to">→</span> HTML via `markdown-it`, LaTeX rendering via `KaTeX`, and frontmatter extraction via `yq` --- and leaves the easy parts (site composition, navigation, templating) to other processes. For each markdown file, it outputs:
 
 - `.html` - The translated content (just the article body, no site chrome)
 - `.json` - The extracted metadata (title, tags, dates, slug)
