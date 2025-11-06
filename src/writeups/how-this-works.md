@@ -116,50 +116,46 @@ set -- "${ARGS[@]}"
 get_flags ARGS "$@"
 set -- "${ARGS[@]}"
 
-CMD="$1"
-shift || true
-
-if [[ "$HELP" == true || "$CMD" == "help" ]]; then
+# Handle help early
+if [[ "$HELP" == true || "$1" == "help" ]]; then
 	print_help
 	exit 0
 fi
 
-PROJECTS=("$@")
+PROJECTS=("${ARGS[@]}")
 if [[ ${#PROJECTS[@]} -eq 0 || "${PROJECTS[0]}" == "all" ]]; then
 	PROJECTS=( $(yaml_get '.versions | keys | .[]') )
 fi
 
+# Track if any action was taken
+ACTION_TAKEN=false
+
 if [[ "$SET_PRESET" == true ]]; then
 	project_iterator set_preset "$VERSION" "${MODE:-publish}"
+	ACTION_TAKEN=true
 fi
 
-# ────── CMD Handling ──────
-case "$CMD" in
-	fetch)
-		project_iterator git_checkout "$VERSION" "both"
-		;;
-	build)
-		project_iterator project_builder "$VERSION" "${MODE:-both}"
-		;;
-	link)
-		project_iterator project_linker "$VERSION" "$MODE"
-		;;
-	full)
-		if ask_confirm "Do a git checkout?"; then
-			project_iterator git_checkout "$VERSION" "both"
-		fi
-		if ask_confirm "Rebuild the project?"; then
-			project_iterator project_builder "$VERSION" "${MODE:-both}"
-		fi
-		if ask_confirm "Update symlinks?"; then
-			project_iterator project_linker "$VERSION" "$MODE"
-		fi
-		;;
-	*)
-		log_error "Unrecognized command: '$CMD'"
-		print_help
-		exit 1
-esac
+if [[ "$DO_FETCH" == true ]]; then
+	project_iterator git_checkout "$VERSION" "both"
+	ACTION_TAKEN=true
+fi
+
+if [[ "$DO_BUILD" == true ]]; then
+	project_iterator project_builder "$VERSION" "${MODE:-both}"
+	ACTION_TAKEN=true
+fi
+
+if [[ "$DO_LINK" == true ]]; then
+	project_iterator project_linker "$VERSION" "$MODE"
+	ACTION_TAKEN=true
+fi
+
+# If no action was specified, show help and exit
+if [[ "$ACTION_TAKEN" == false ]]; then
+	log_error "No action specified"
+	print_help
+	exit 1
+fi
 ```
 
 `ship.sh` has 3 basic tasks:
@@ -168,10 +164,10 @@ esac
 - **Build**: Copy files to a version-specific directory (*e.g.*: `/deploy/out/blog/v1.2/publish/`) and run any required processing (*e.g.*: markdown → HTML)
 - **Link**: Update a symlink (*e.g.*: `/var/www/blog`) to point at the new build
 
-My typical workflow: `./ship.sh full blog`, which runs all three steps interactively. The `project_iterator` helper applies the requested operation to each project --- or every project in `environment.yml` if I specify `all`. I use this script for all projects on my website, of which blog is just one.
+My typical workflow: `./ship.sh blog --full`, which runs all three steps interactively. The `project_iterator` helper applies the requested operation to each project --- or every project in `environment.yml` if I specify `all`. I use this script for all projects on my website, of which blog is just one.
 
 ```bash
-jcall@jcall-engineer:/jcall.engineer/deploy$ ./ship.sh full blog
+jcall@jcall-engineer:/jcall.engineer/deploy$ ./ship.sh blog --full
 === ship.sh run started at Thu Oct 30 16:34:16 UTC 2025 ===
 Do a git checkout? (y/n): y
 Fetching updates from origin in blog
@@ -233,7 +229,7 @@ Update symlinks? (y/n): n
 
 This setup enables fearless experimentation:
 
-- **Instant rollback**: If an update breaks something, I can revert by re-linking to the previous build (*e.g.*: `./ship.sh link blog --version v1.1`)
+- **Instant rollback**: If an update breaks something, I can revert by re-linking to the previous build (*e.g.*: `./ship.sh blog --link --version v1.1`)
 - **Independent deployments**: I can update the blog without touching other systems, or test experimental templates on a dev subdomain
 - **Fast iteration**: The build process is scoped to what changed --- updating the blog doesn't require rebuilding templates, restarting Express, or touching nginx config
 
