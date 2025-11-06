@@ -9,8 +9,8 @@ draft: true
 This site reflects how I think and work, not what a marketing department would build. I financed college with web development internships, but it was, decidedly, never my passion. In particular, I get quite a headache having to worry about:
 
 - Security: handling diverse threat models
-- Design: CSS and visual aesthetics  
-- Responsive layouts: ensuring readability across screen sizes
+- Design: CSS and visual aesthetics
+- Responsive layouts: ensuring usability across screen sizes
 - Browser compatibility: supporting legacy or niche browsers
 - Accessibility: following WCAG guidelines
 
