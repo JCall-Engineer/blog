@@ -286,6 +286,115 @@ This separation of concerns is what makes the system maintainable. The markdown 
 
 ## Template Composability: Three Layers Deep
 
+After the markdown pipeline produces clean HTML partials and metadata, the next challenge is composing complete pages. I needed something flexible enough to handle shared layouts, reusable components, and page-specific content --- without the rigidity of Hugo's templating or the database dependencies of WordPress.
+
+So I built a custom template system that treats pages as composable layers. The core insight: a blog post isn't one monolithic HTML file --- it's three distinct layers that get merged:
+
+1. **Site layer** (`index.html`) - The outer shell: `<html>`, `<head>`, navigation, footer
+2. **Domain layer** (`blog/index.html`) - Blog-specific structure: sidebar navigation, content wrapper
+3. **Page layer** (`blog/post.html`) - The actual content: article header, body, metadata
+
+Each layer is just an HTML template with injection points marked by `{{variable}}` syntax. When a request comes in, Express composes these layers on-demand, injecting the markdown-generated HTML and computed metadata where needed.
+
+Here's what that looks like in practice. The site layer defines the overall page structure:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{{title}}</title>
+	...
+{{head_elems?, 1}}
+</head>
+<body>
+	<header class="noselect">
+		<nav>...</nav>
+	</header>
+	<main>
+{{domain, 2}}
+	</main>
+	<footer>...</footer>
+</body>
+</html>
+```
+
+The `{{domain, 2}}` tells the system: "inject the domain layer here, indented 2 tabs." The domain layer (for the blog) defines the two-column layout:
+
+```html
+<aside id="blog-nav">
+	<nav>
+		<section id="blog-nav-tag">
+			<h2>Browse by Tag</h2>
+			<ul>
+{{nav_tags, 4}}
+			</ul>
+		</section>
+		...
+	</nav>
+</aside>
+<section id="blog-content">
+{{page, 1}}
+</section>
+```
+
+And the page layer is where the actual post content lives:
+
+```html
+<article id="{{slug}}">
+	<header>
+		<h1>{{blog_title}}</h1>
+		<dl class="byline">
+{{blog_metadata, 3}}
+		</dl>
+	</header>
+	<section>
+{{blog_post, 2}}
+	</section>
+</article>
+```
+
+### Why Not Just Use EJS or Handlebars?
+
+Existing templating engines solve similar problems, but they come with baggage I didn't want:
+
+- **Feature creep**: Built-in loops, conditionals, partials, helpers --- most of which I don't need
+- **Syntax overhead**: Learning another DSL when basic string injection does the job
+- **Indirect dependencies**: Another package to maintain, update, and potentially break
+
+My system is ~200 lines of code in `template.js`. It handles exactly what I need:
+
+**Indentation preservation**: The number after a variable (`{{domain, 2}}`) specifies tab depth, keeping the composed HTML readable instead of collapsing everything to the left margin.
+
+**Dependency resolution**: When the domain layer references `{{page}}`, the system detects it's an alias to another layer, resolves dependencies in the right order, and detects cycles. This keeps templates decoupled --- the site layer doesn't need to know what's inside `{{domain}}`, it just injects whatever that resolves to.
+
+**Optional and conditional injection**: Three patterns handle different cases:
+
+- `{{variable?}}` - If undefined, omit it silently (used for page-specific CSS)
+- `{{variable ? value}}` - If truthy, inject `value` (used for checkbox `checked` attributes)
+- `{{variable(compare) ? value}}` - If variable equals `compare`, inject `value`
+
+The comparison pattern is what makes the web dashboard for my Discord bot work, letting me write declarative form controls:
+
+```html
+<select name="queue_duration">
+	<option value="15" {{queue_duration(15) ? selected}}>15 seconds</option>
+	<option value="30" {{queue_duration(30) ? selected}}>30 seconds</option>
+	<option value="60" {{queue_duration(60) ? selected}}>1 minute</option>
+</select>
+```
+
+The template system compares `queue_duration` against each value and injects `selected` only where they match. For complex logic that doesn't fit these patterns, that happens in JavaScript before passing data to the template.
+
+When something goes wrong, error messages track the full dependency chain (e.g., `site → domain → page`), making debugging straightforward.
+
+The simplicity pays off. I can read the entire implementation in one sitting. There's no documentation to search through, no edge cases to memorize, no updates to track. It's frozen code that will work unchanged for years.
+
+### Runtime Composition vs. Static Generation
+
+The blog *could* be fully static --- the markdown is pre-built, templates rarely change, and there's no user-specific content. But runtime composition gives me version testing (test new templates on my dev subdomain without rebuilding) and shared infrastructure (one system for both the blog and the Discord dashboard that *does* need user-specific data).
+
+Could I optimize the blog to be fully static? Sure. But the added complexity of maintaining two separate rendering paths didn't seem worth it when runtime composition works fine and costs almost nothing.
+
 ## The Details Matter: CSS, Themes, and Sharing
 
 ## Closing the Loop: GitHub Integration
