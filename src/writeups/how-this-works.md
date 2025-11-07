@@ -422,7 +422,54 @@ I use jQuery. There, I said it. I learned it during my web development internshi
 
 I still hate CSS. The fact that I made something decent doesn't change that. It just means I hate bad CSS more than I hate writing good CSS. It's like cleaning --- nobody enjoys it, but living in filth is worse, so you do it properly when you must.
 
-## Closing the Loop: GitHub Integration
+## Version Control and Transparency
+
+Every blog post automatically includes a link to its version history on GitHub. This isn't just about backing up my work --- it's about transparency. You can see exactly when and how a post was edited, what changed, and why. No silent corrections or memory-holed content.
+
+The GitHub integration happens automatically through GitLab CI/CD. When I push to my private GitLab repository, the pipeline builds the site and mirrors everything to GitHub. I don't have to remember to push to multiple remotes or worry about keeping things in sync. The `.gitlab-ci.yml` handles the deployment and the GitHub mirror in one go:
+
+```yaml
+script:
+  - ssh $SSH_USER@$SSH_HOST "... ./ship.sh blog --fetch -v $CI_COMMIT_REF_NAME --build --yes ..."
+  - ssh $SSH_USER@$SSH_HOST "... git push github $CI_COMMIT_REF_NAME"
+```
+
+### Metadata That Matters
+
+Each post type can have its own metadata fields that get displayed alongside the content. The system builds these dynamically based on what's actually present:
+
+```js
+// Always show author and version history
+const dts = [];
+dts.push(`<dt>Author</dt><dd>${meta.author || 'John Call'}</dd>`);
+
+// Tags become clickable badges
+if (meta.tags && meta.tags.length > 0) {
+	const tagBadges = meta.tags.map(tag =>
+		`<a class="badge" href="${appContext.name}/tags/${tag}">${tag}</a>`
+	).join('');
+	dts.push(`<dt>Tags</dt><dd>${tagBadges}</dd>`);
+}
+
+// Different post types get different metadata
+// Letters track correspondence details
+// Research posts note when the research was conducted
+// Everything links to its commit history
+
+const link = type && slug
+	? `https://github.com/JCall-Engineer/blog/commits/main/src/${type}/${slug}.md`
+	: `https://github.com/JCall-Engineer/blog/commits/main/src/index.md`
+dts.push(`<dt>Version History</dt><dd><a href="${link}">${link}</a></dd>`);
+
+Layout.layers.addOne('page', 'blog/post.html', {
+	...,
+	blog_metadata: dts.join('\n'),
+});
+```
+
+This approach means I can add new metadata fields as needed without touching the display logic. Letters can track when they were sent and received, research posts can note their sources, and everything automatically gets a version history link pointing to the exact file in GitHub.
+
+The version history isn't just a nice-to-have --- it's part of the blog's philosophy. Ideas evolve, understanding improves, and sometimes I'm just wrong. Rather than pretending the first draft was perfect, the commit history shows the real process of thinking in public.
 
 ## What It Costs (Money and Time)
 
