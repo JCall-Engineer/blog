@@ -394,7 +394,33 @@ The blog *could* be fully static --- the markdown is pre-built, templates rarely
 
 Could I optimize the blog to be fully static? Sure. But the added complexity of maintaining two separate rendering paths didn't seem worth it when runtime composition works fine and costs almost nothing.
 
-## The Details Matter: CSS, Themes, and Sharing
+## The CSS I Actually Don't Hate (Much)
+
+Despite my well-documented aversion to CSS, I have to admit that building this blog's styling system turned into something approaching... dare I say it... fun? Don't get me wrong --- I still hate CSS. But I hate unmaintainable, unpredictable CSS more, so I put in the effort to make something that sucks less.
+
+### Organization Over Chaos
+
+The stylesheets use modern CSS features like nesting, CSS variables for theming, and `@layer` directives to establish a clear cascade hierarchy. This level of intentionality probably seems at odds with someone who claims to hate CSS, but here's the thing: if I'm going to suffer through writing styles, they better be predictable and maintainable. The layering system (`theme`, `reset`, `components`, `layout`, `application`) means I always know where styles are coming from and which ones win. No more specificity wars or `!important` spam.
+
+### The Part I Actually Enjoyed
+
+Creating the themes themselves was disproportionately enjoyable. There's something satisfying about watching the entire site transform with a theme switch --- from the metallic silver-pewter aesthetic to the warm cream tones of the light theme, the moody dark mode, or even the playful pastel variant. I genuinely like how they all turned out, each with its own personality while maintaining readability and consistency.
+
+The theme switcher stores your preference in a domain-wide cookie (`.jcall.engineer`), so your choice persists across all subdomains and future visits. It's a small touch, but it respects user preference without requiring accounts or complicated state management.
+
+### Text Sharing: Because Medium Had One Good Idea
+
+One feature I wanted was the ability to share links to specific highlighted text, similar to Medium's implementation. So I built my own. When you select text in a blog post, a small link button appears. Click it, and you get a URL with a text fragment that will highlight that exact passage when someone visits the link. It's dynamically enabled on blog posts and can be easily added to other sections in the future.
+
+There's one limitation I'm aware of: when (not if) I edit blog posts, links to the old text won't highlight anymore. The link will still take you to the post, and you can check the version history on GitHub to see what changed, but the highlight won't work. I might make this fancier in the future with some kind of versioning system, but for now, it's good enough.
+
+### Yes, I Use jQuery
+
+I use jQuery. There, I said it. I learned it during my web development internship while funding my college degree, and despite not touching web development for nearly a decade, I was able to pick it up again intuitively. It's a well-designed library that just makes sense. While the JavaScript ecosystem has evolved tremendously, jQuery still elegantly solves the problems I need solved without the complexity of modern build systems or framework churn.
+
+### But Still...
+
+I still hate CSS. The fact that I made something decent doesn't change that. It just means I hate bad CSS more than I hate writing good CSS. It's like cleaning --- nobody enjoys it, but living in filth is worse, so you do it properly when you must.
 
 ## Closing the Loop: GitHub Integration
 
