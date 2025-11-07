@@ -2,6 +2,7 @@
 title: "How I Built a Blog That Versions My Thinking"
 description: "How and why I built custom infrastructure for transparent revision - from version-controlled deployments to GitHub integration"
 tags: [ projects, software ]
+date_effective: 2025-11-07
 ---
 ## Building With Intent
 
