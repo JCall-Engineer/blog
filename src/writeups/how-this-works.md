@@ -111,7 +111,7 @@ The core of my deployment system is `ship.sh` --- a bash script that automates f
 - **Build**: Copy files to a version-specific directory (*e.g.*: `/deploy/out/blog/v1.2/publish/`) and run any required processing (*e.g.*: markdown <span aria-label="to">→</span> HTML)
 - **Link**: Update a symlink (*e.g.*: `/var/www/blog`) to point at the new build
 
-My typical workflow is simple: `./ship.sh blog --full`, which runs all three steps interactively. The script can handle multiple projects at once — I use it for everything on my website, not just the blog. Running `./ship.sh all --full` would update every project defined in my `environment.yml` configuration. But most of the time, I update projects individually.
+My typical workflow is simple: `./ship.sh blog --full`, which runs all three steps interactively. The script can handle multiple projects at once --- I use it for everything on my website, not just the blog. Running `./ship.sh all --full` would update every project defined in my `environment.yml` configuration. But most of the time, I update projects individually.
 
 ```bash
 jcall@jcall-engineer:/jcall.engineer/deploy$ ./ship.sh blog --full
