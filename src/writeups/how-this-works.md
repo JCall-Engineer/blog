@@ -31,7 +31,7 @@ This approach --- building custom where it matters, trusting proven tools elsewh
 
 ## The Problem: Infrastructure for Intellectual Honesty
 
-If you've read [my intro post](https://jcall.engineer) you'll understand that the motivation for this site was driven by a need to revise fearlessly and honestly. I wanted edit history to be transparent and accessible --- like Facebook's edit tracking, but public and permanent.
+If you've read [my intro post](https://blog.jcall.engineer) you'll understand that the motivation for this site was driven by a need to revise fearlessly and honestly. I wanted edit history to be transparent and accessible --- like Facebook's edit tracking, but public and permanent.
 
 Git was the natural choice for version control. And since Git diffs work best with plain text, markdown became the obvious format for content. HTML diffs are incomprehensible at a glance, but markdown is readable by anyone --- even in raw form. It's widespread enough that people use it daily without realizing: Discord messages, Reddit comments, AI chat interfaces. For public version history (and simplicity of writing), it's perfect.
 
