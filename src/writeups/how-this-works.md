@@ -494,3 +494,21 @@ Writing content in Markdown is refreshingly simple compared to everything else t
 The real cost wasn't money or even time --- it was the mental energy spent making decisions that would compound into either future pain or future ease. I chose ease, even if it took longer to get there.
 
 ## Should You Do This?
+
+Probably not.
+
+I've thought about packaging this as a deliverable for others who want to replicate my pipeline. It's not there yet. While many pieces were built to be agnostic, so much remains tailor-made to how I think and operate that I don't think others *should* replicate it. How often do you come across a blog where version history and revision are central to the philosophy?
+
+To adapt my approach, you'd need to be comfortable with:
+
+- Git
+- Linux terminals and SSH
+- HTML composition
+- CSS
+- JavaScript, Node.js, and Express
+
+This isn't a WordPress replacement --- at least not yet. Could there be a future with general site development using Markdown, WYSIWYG editors, and a web-based control panel? Maybe... if I --- or someone else --- finds the time, energy, and motivation. But web development isn't my passion. I'm an electrical engineer who likes getting into a system's internals, not the user layer.
+
+That said, I'm proud of what I built. It enables fearless revision, transparency, and composition with components that are independently tested, versioned, and swappable. It's overengineered in all the right places and just simple enough where it matters.
+
+If you're still interested despite my warnings, watch my GitHub. Maybe one day it'll be ready for others. Until then, it remains a deeply personal tool, built for how I think and work.
