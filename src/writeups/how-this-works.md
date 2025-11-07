@@ -22,7 +22,6 @@ One of the curses of my psychology when combined with my technical ability is th
 - Nginx
 - Node.js
 - Express
-- MongoDB
 - yq (Go version by mikefarah)
 - markdown-it (Python)
 - Katex
