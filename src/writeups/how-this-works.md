@@ -473,4 +473,24 @@ The version history isn't just a nice-to-have --- it's part of the blog's philos
 
 ## What It Costs (Money and Time)
 
+### The Financial Side
+
+The blog runs lean:
+
+- **Domain**: $27/year for domain name registration through Cloudflare
+- **Hosting**: $7.20/month for hosting through DigitalOcean (includes backups)
+- **Everything else**: Free, open source, or hand-crafted
+
+That's it. Less than $115 a year all-in. No subscription services, no premium themes, no unnecessary middleware. Just the bare essentials to keep the site running reliably.
+
+### The Time Investment
+
+The development burden was real. This took about nine months to build, working with the limited focus and clarity that comes with chronic health conditions. Some days were productive, others weren't. The timeline reflects reality, not some idealized development sprint.
+
+But here's the payoff: maintenance is smooth. All that upfront work means deployment is now just a push to GitLab. The CI/CD pipeline handles the build and deployment automatically. If I need to restart services (rare), I SSH in and run `ship.sh` manually --- still straightforward.
+
+Writing content in Markdown is refreshingly simple compared to everything else that went into building this site. Though I'll admit, writing is probably less fun than puzzling out the infrastructure pieces. There's something satisfying about solving technical problems, figuring out how all the pieces fit together, making the deployment pipeline just work. Even the theme switching was fun (the CSS itself though? Still hate it).
+
+The real cost wasn't money or even time --- it was the mental energy spent making decisions that would compound into either future pain or future ease. I chose ease, even if it took longer to get there.
+
 ## Should You Do This?
