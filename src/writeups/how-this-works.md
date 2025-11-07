@@ -446,7 +446,7 @@ dts.push(`<dt>Author</dt><dd>${meta.author || 'John Call'}</dd>`);
 // Tags become clickable badges
 if (meta.tags && meta.tags.length > 0) {
 	const tagBadges = meta.tags.map(tag =>
-		`<a class="badge" href="${appContext.name}/tags/${tag}">${tag}</a>`
+		`<a class="badge" href="${req.appContext.name}/tags/${tag}">${tag}</a>`
 	).join('');
 	dts.push(`<dt>Tags</dt><dd>${tagBadges}</dd>`);
 }
@@ -461,9 +461,11 @@ const link = type && slug
 	: `https://github.com/JCall-Engineer/blog/commits/main/src/index.md`
 dts.push(`<dt>Version History</dt><dd><a href="${link}">${link}</a></dd>`);
 
-Layout.layers.addOne('page', 'blog/post.html', {
-	...,
+req.appContext.Layout.layers.addOne('page', 'blog/post.html', {
+	slug: meta.slug,
+	blog_title: meta.title,
 	blog_metadata: dts.join('\n'),
+	blog_post: html,
 });
 ```
 
