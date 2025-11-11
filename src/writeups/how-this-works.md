@@ -113,7 +113,7 @@ The core of my deployment system is `ship.sh` --- a bash script that automates f
 
 My typical workflow is simple: `./ship.sh blog --full`, which runs all three steps interactively. The script can handle multiple projects at once --- I use it for everything on my website, not just the blog. Running `./ship.sh all --full` would update every project defined in my `environment.yml` configuration. But most of the time, I update projects individually.
 
-```bash
+```text
 jcall@jcall-engineer:/jcall.engineer/deploy$ ./ship.sh blog --full
 === ship.sh run started at Thu Oct 30 16:34:16 UTC 2025 ===
 Do a git checkout? (y/n): y
@@ -190,7 +190,7 @@ I started working on this website back in April of 2025. My first approach was t
 
 So I wrote a small Python script (~200 lines of logic + 300 lines of supporting structure, 1200 lines of unit tests) that was structure-agnostic, tightly scoped, and did its job well. Here's what it does:
 
-```bash
+```text
 usage: markdown_translator.py [-h] [-d INPUT_DIR] [-f INPUT_FILE]
        [-@ RELATIVE_ROOT] [-m MAP] [-o OUTPUT] [--draft] [--unit-tests]
        [--dry-run] [--flatten-output] [--force]
@@ -211,7 +211,7 @@ options:
 
 The tool is intentionally "dumb" --- it doesn't care about your site structure, it just mirrors your input tree and translates what you tell it to where you tell it to. In practice, `ship.sh` calls it like this:
 
-```bash
+```text
 python markdown_translator.py \
 	-d "$dir/src" \
 	-o "$dir/html" \
