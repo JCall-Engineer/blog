@@ -465,6 +465,6 @@ If you're still interested despite my warnings, watch my GitHub. Maybe one day i
 
 ## Final Thoughts
 
-This blog is a tool for thinking, not just publishing. The version history isn't a feature—it's the point. When you can revise fearlessly because every change is tracked, you write differently. You think differently. You're free to be wrong, to evolve, to contradict your past self without pretending you were always right.
+This blog is a tool for thinking, not just publishing. The version history isn't a feature --- it's the point. When you can revise fearlessly because every change is tracked, you write differently. You think differently. You're free to be wrong, to evolve, to contradict your past self without pretending you were always right.
 
 That's what all this infrastructure enables: the freedom to think in public without the fear of being caught changing your mind.
