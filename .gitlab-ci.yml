@@ -4,14 +4,16 @@ deploy:
   stage: deploy
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
-    - eval $(ssh-agent -s)
-    - printf "%s" "$SSH_PRIVATE_KEY_B64" | base64 -d > /tmp/ssh_key
-    - chmod 600 /tmp/ssh_key
-    - ssh-add /tmp/ssh_key
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+    - 'eval $(ssh-agent -s)'
+    - 'echo "Variable length: ${#SSH_PRIVATE_KEY_B64}"'
+    - 'base64 --decode <<< "$SSH_PRIVATE_KEY_B64" | head -n 1'
+    - 'base64 --decode <<< "$SSH_PRIVATE_KEY_B64" > /tmp/ssh_key'
+    - 'chmod 600 /tmp/ssh_key'
+    - 'ssh-add /tmp/ssh_key'
+    - 'mkdir -p ~/.ssh'
+    - 'chmod 700 ~/.ssh'
+    - 'ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts'
+    - 'chmod 644 ~/.ssh/known_hosts'
   script:
     - ssh $SSH_USER@$SSH_HOST "source /home/gitlab-ci/env.sh && cd /jcall.engineer/deploy && ./ship.sh blog --fetch -v $CI_COMMIT_REF_NAME --build --yes && sudo chown -R jcall:www-data /jcall.engineer/deploy/out/"
     - ssh $SSH_USER@$SSH_HOST "source /home/gitlab-ci/env.sh && cd /jcall.engineer/blog && git push github $CI_COMMIT_REF_NAME"
