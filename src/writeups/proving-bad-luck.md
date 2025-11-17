@@ -1255,15 +1255,30 @@ The `constant_space_probability` function was written in March and is wonderful 
 The implementation for this section might look confusing at first because I *insisted* on using the combinatorial optimization above as a "fast path" wherever possible. But once you understand what it's doing (and at the risk of boasting, I think it's quite clever), it's not that bad. I found this visual aid extremely helpful --- nay, essential --- for understanding what constitutes a boundary node in 3v2:
 
 <style>
-#risk-prob-space {
-	background-color: var(--main-bg-primary);
-	circle {
-		fill: var(--main-bg-accent);
-		stroke: var(--main-text-color);
+svg#risk-prob-space {
+	#patch_1 path {
+		fill: var(--main-bg-primary) !important;
 	}
-	text, rect, path, line {
-		stroke: var(--main-text-color);
-		fill: var(--main-text-color);
+
+	path[style*="fill: #add8e6"] {
+		fill: var(--main-bg-accent) !important;
+		stroke: var(--main-text-color) !important;
+	}
+
+	text, use {
+		fill: var(--main-text-color) !important;
+	}
+
+	path[style*="stroke-dasharray"] {
+		stroke: var(--main-text-color) !important;
+	}
+
+	path[style*="facecolor"] {
+		stroke: var(--main-text-color) !important;
+	}
+
+	path {
+		stroke: var(--main-text-color) !important;
 	}
 }
 </style>
