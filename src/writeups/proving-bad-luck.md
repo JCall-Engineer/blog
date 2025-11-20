@@ -147,19 +147,19 @@ Now for the actual simulation. This is where we implement the Risk combat rules 
 
 ```python
 def simulate_battle(battle: BattleParams, rng: numpy.random.Generator):
-		attackers_left = battle.attackers
-		defenders_left = battle.defenders
-		while attackers_left > 0 and defenders_left > 0:
-			attack_rolls = rng.integers(1, 7, min(3, attackers_left))
-			defend_rolls = rng.integers(1, 7, min(2, defenders_left))
-			attack_rolls.sort()
-			defend_rolls.sort()
-			for a, d in zip(attack_rolls[::-1], defend_rolls[::-1]):
-				if a > d:
-					defenders_left -= 1
-				else:
-					attackers_left -= 1
-		return battle.attackers - attackers_left
+	attackers_left = battle.attackers
+	defenders_left = battle.defenders
+	while attackers_left > 0 and defenders_left > 0:
+		attack_rolls = rng.integers(1, 7, min(3, attackers_left))
+		defend_rolls = rng.integers(1, 7, min(2, defenders_left))
+		attack_rolls.sort()
+		defend_rolls.sort()
+		for a, d in zip(attack_rolls[::-1], defend_rolls[::-1]):
+			if a > d:
+				defenders_left -= 1
+			else:
+				attackers_left -= 1
+	return battle.attackers - attackers_left
 
 def worker(battle: BattleParams, batch_size: int, update_interval: int, shared_progress: ValueProxy, lock: Lock) -> numpy.ndarray:
 	rng = numpy.random.default_rng()
