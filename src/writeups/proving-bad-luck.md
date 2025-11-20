@@ -1,5 +1,6 @@
 ---
 title: "How I Proved I was Unlucky using Cuda and Verified it with Math"
+description: "A deep-dive analysis into the probabilities of Risk using CUDA and Math to validate the improbability a humorously outrageous game."
 tags: [ projects, software ]
 draft: true
 ---
