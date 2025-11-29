@@ -7,16 +7,16 @@ draft: true
 
 ## First, a Small Disclaimer
 
-I first performed this analysis in March 2025. I am writing this blog article now in November of the same year. I thought it was an article worth writing for a few reasons:
+This project started as curiosity-driven exploration without version control --- I wanted to quantify exactly how ridiculous that Risk game was. Many code snippets here are reconstructed to clearly show the progression of ideas, though the final results are fresh runs.
+
+I thought it was an article worth writing for a few reasons:
 
 - It's funny, quantitative, and unique
 - I think GPU coding is cool, and this was an excuse to dive into some CUDA
 - There is some cool math behind the theoretical model I came up with to validate my simulations
 - It gives me an opportunity to use Latex on my blog
 - It demonstrates work I've done and find cool
-- Hopefully the reader will gain some sympathy for my pathological misfortune, and perhaps an unusually deep understanding of probabilities in Risk
-
-However, this does mean that many of the code snippets in this article are reconstructed. I didn’t start this project in git because I assumed it would be a one-off. That means I don’t have the original, messier, simpler versions of the code, but I do remember the general progression.
+- Hopefully the reader will gain some sympathy for my pathological misfortune, and --- perhaps --- an *unusually* deep understanding of probabilities in Risk
 
 ## The Motivation
 
@@ -901,8 +901,8 @@ We sum over paths until we reach the following boundary transitions:
 
 These are the states where we can no longer roll the full 3v2 configuration, requiring a different probability model. At which point, we have 2 choices:
 
-- Ignore the remainder knowing that the error term is ridiculously small at that point (what I did in March, and I found an upper bound for the error term)
-- Recompute the probability space for fewer dice and finish those final tail ends (what I did now in November)
+- Ignore the remainder knowing that the error term is ridiculously small at that point (you can even derive an upper bound for the error)
+- Recompute the probability space for fewer dice and finish those final tail ends (exact solution, more complex)
 
 ### Architecting for Rigorous Analysis
 
@@ -1253,7 +1253,7 @@ This function works because within 3v2 space, we can count path arrangements com
 
 ### Traversing for an Exact Solution
 
-The `constant_space_probability` function was written in March and is wonderful for estimates. After traversing 50+ edges, the probabilities get *very* small *very* fast, making further traversals increasingly negligible. However, it's November now and I thought it would make for a more entertaining blog post to provide the exact solution.
+The `constant_space_probability` function is wonderful for estimates. After traversing 50+ edges, the probabilities get *very* small *very* fast, making further traversals increasingly negligible. However, I thought it would make for a more entertaining blog post --- and demonstrate my chops --- to provide the exact solution.
 
 The implementation for this section might look confusing at first because I *insisted* on using the combinatorial optimization above as a "fast path" wherever possible. But once you understand what it's doing (and at the risk of boasting, I think it's quite clever), it's not that bad. I found this visual aid extremely helpful --- nay, essential --- for understanding what constitutes a boundary node in 3v2:
 
