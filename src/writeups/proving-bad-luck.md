@@ -797,7 +797,7 @@ Testing FastPath with
 ==WARNING== No kernels were profiled.
 ```
 
-This represents a puzzle I have not solved. I would love to really get to the bottom of this but it is quickly becoming a blackbox problem and I'm not really willing to break out the Oscilloscope. Let's roll back some of this profiling nonsense and just see what the results actually look like shall we?
+This represents a puzzle that remains unsolved. I would love to really get to the bottom of this but it is quickly becoming a blackbox problem and I'm not really willing to break out the Oscilloscope. Let's roll back some of this profiling nonsense and just see what the results actually look like shall we?
 
 ```text
 Running CUDA-N100b-A75-D10 simulation...
