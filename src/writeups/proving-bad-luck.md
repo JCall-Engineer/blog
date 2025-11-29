@@ -1481,6 +1481,32 @@ Ran 3 tests in 0.557s
 OK
 ```
 
-### Framing the Question
+## The Question Matters More Than the Answer
 
-At this point, we have a *tested*, **precise** method of calculating the probability of starting at `(75, 10)` and ending up at `(a, d)`. And we have a function that can accept multiple destinations and sum those probabilities together. This means we have the tools to answer all sorts of questions so long as we are intentional in what we ask and interpreting what the answers mean. For instance, not only can we ask "How likely or unlikely are we to lose 70 attackers" --- we can ask "At what point does losing troops while attacking become worse than one in a million? One in a billion? One in a trillion?"
+Having a precise calculator doesn't guarantee insight --- understanding what makes a probability meaningful is the difference between measuring something real and simply staring at impressive-looking numbers.
+
+Consider flipping a fair coin 10 times. ***Every*** sequence of heads/tails you get has the exact same probability: $2^{-10} \text{ or } \frac{1}{1024}$. Flip it 20 times? That's $2^{-20}$ --- roughly one in a million. No matter which sequence you witness, it is staggeringly unlikely, yet it *inevitably* happens. The "unlikeliness" isn't in the outcome itself --- every specific outcome is equally improbable --- but in whether you're measuring something meaningful.
+
+This matters for Risk. I know I lost roughly 75 attackers against roughly 10 defenders. But I didn't record the exact final state. And even if I had, asking "what's the probability of ending at exactly (0, 10)?" is like asking about that specific coin sequence: technically improbable, but not particularly informative. So what should I actually calculate?
+
+### Validating Simulation
+
+One goal of calculating exact probabilities is so that we can validate that our simulations reflect reality --- as opposed to a reflection of bias in the random number generation. The simulations tracked outcomes by troops lost: starting at `(75, 10)`, they recorded how many attackers remained when either side hit zero. We can calculate this exact distribution:
+
+```python
+def from_75_10_losing_n() -> list[Fraction]:
+	"""
+	Generate an exact probability table for starting with (75, 10) and losing n troops
+	This method most closely mirrors monte carlos simulations
+	"""
+	output = [Fraction(0)] * 76
+	# Compute victory scenarios
+	for attackers in range(1, 76):
+		output[75 - attackers] += compute_probability(Node(75, 10), Node(attackers, 0))
+	# Compute defeat scenarios
+	for defenders in range(1, 11):
+		output[75] += compute_probability(Node(75, 10), Node(0, defenders))
+	return output
+```
+
+This gives us the theoretical distribution to compare against our simulated results.
