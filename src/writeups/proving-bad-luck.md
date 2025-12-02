@@ -1494,19 +1494,32 @@ This matters for Risk. I know I lost roughly 75 attackers against roughly 10 def
 One goal of calculating exact probabilities is so that we can validate that our simulations reflect reality --- as opposed to a reflection of bias in the random number generation. The simulations tracked outcomes by troops lost: starting at `(75, 10)`, they recorded how many attackers remained when either side hit zero. We can calculate this exact distribution:
 
 ```python
-def from_75_10_losing_n() -> list[Fraction]:
+def from_start_losing_n(attackers = 75, defenders = 10) -> list[Fraction]:
 	"""
-	Generate an exact probability table for starting with (75, 10) and losing n troops
+	Generate an exact probability table for starting with (attackers, defenders) and losing n troops
 	This method most closely mirrors monte carlos simulations
 	"""
-	output = [Fraction(0)] * 76
+	start = Node(attackers, defenders)
+	range_attackers = attackers + 1
+	range_defenders = defenders + 1
+
+	output = [Fraction(0)] * range_attackers
+
 	# Compute victory scenarios
-	for attackers in range(1, 76):
-		output[75 - attackers] += compute_probability(Node(75, 10), Node(attackers, 0))
+	for attackers_left in range(1, range_attackers):
+		output[attackers - attackers_left] += compute_probability(start, Node(attackers_left, 0))
+
 	# Compute defeat scenarios
-	for defenders in range(1, 11):
-		output[75] += compute_probability(Node(75, 10), Node(0, defenders))
+	for defenders_left in range(1, range_defenders):
+		output[attackers] += compute_probability(start, Node(0, defenders_left))
+
 	return output
 ```
 
-This gives us the theoretical distribution to compare against our simulated results.
+This gives us the theoretical distribution to compare against our simulated results. I've kept y'all waiting long enough, here are
+
+### The Results: Visualized
+
+![Bar chart comparing normalized probability distributions across attackers lost (0-75) - for CPU 100m simulations, CUDA 1t simulations, and theoretical calculations - showing close agreement with minor deviations in CUDA around the peak region of 5-10 attackers lost](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/normalized_bins.png)
+![Line graph showing cumulative probability reaching 1.0 around 25 attackers lost, with CPU, CUDA, and theoretical curves nearly overlapping throughout](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/cumulative.png)
+![Log-scale scatter plot showing probability distribution from 10^-2 to 10^-13, with simulation results matching theoretical probabilities across 12 orders of magnitude down to the extreme tail at 75 attackers lost](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/log.png)
