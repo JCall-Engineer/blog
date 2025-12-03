@@ -12,7 +12,7 @@ This project started as curiosity-driven exploration without version control ---
 I thought it was an article worth writing for a few reasons:
 
 - It's funny, quantitative, and unique
-- I think GPU coding is cool, and this was an excuse to dive into some CUDA
+- I think graphics-card (GPU) coding is cool, and this was an excuse to dive into some CUDA
 - There is some cool math behind the theoretical model I came up with to validate my simulations
 - It gives me an opportunity to use Latex on my blog
 - It demonstrates work I've done and find cool
