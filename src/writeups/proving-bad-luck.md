@@ -7,7 +7,7 @@ draft: true
 
 ## First, a Small Disclaimer
 
-This project started as curiosity-driven exploration without version control --- I wanted to quantify exactly how ridiculous that Risk game was. Many code snippets here are reconstructed to clearly show the progression of ideas, though the final results are fresh runs.
+This project started as curiosity-driven exploration without version control --- I wanted to quantify just how absurd *one particular* game of Risk was. Many code snippets here are reconstructed to clearly show the progression of ideas, though the final results are fresh runs.
 
 I thought it was an article worth writing for a few reasons:
 
