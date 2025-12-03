@@ -1180,11 +1180,13 @@ T &\in \left\{t : t \equiv |\Delta A| \pmod{2}, 0 \leq t \leq E\right\} \\
 \end{aligned}
 $$
 
-If you glazed over those equations, don't worry! Because now that I've finished showing off my ability to render them on my blog, we're going to (mostly) ignore all that (sorry not sorry). The important part is that `WL` can be replaced by `TT` and we have to count how many ways there are to arrange a certain sequence of edges, that's all that really matters. We can computationally iterate through pairs of `WL` much cheaper than traversing the graph. And determining how many ways to arrange them? If you've taken a statistics or probability course you might be aware of permutations:
+If you glazed over those equations, don't worry! Because now that I've finished showing off my ability to render them on my blog, we're going to (mostly) ignore all that (sorry not sorry). The important part is that `WL` can be replaced by `TT` and we have to count how many ways there are to arrange a certain sequence of edges, that's all that really matters. We can computationally iterate through pairs of `WL` much cheaper than traversing the graph.
+
+Here's the key insight that makes this tractable: we don't need to trace every path individually. Just like you can calculate how many ways to rearrange the letters in "APPLE" without listing them all ($\frac{5!}{2! \times 1! \times 1!} = 60$, accounting for the two P's), we can count battle paths mathematically. If we know we need to go from `(75, 10)` to `(70, 5)`, we just need to count how many ways to arrange the W's, T's, and L's that get us there. If you've taken a statistics or probability course you might be aware of the general formula for permutations:
 
 $$P_n^m = \frac{n!}{(n - m)!}$$
 
-This gives you the number of ways to arrange `m` items from a list of `n` options in a specific order. For our problem, we need something similar but for sequences with repeated elements. The multinomial coefficient gives us the number of ways to arrange a sequence with `w` W-edges, `l` L-edges, and `t` T-edges:
+This gives you the number of ways to arrange `m` items from a list of `n` options in a specific order. For our problem, we need something similar but for sequences with repeated elements. To get the number of ways to arrange a sequence with `w` W-edges, `l` L-edges, and `t` T-edges we use an even more generalized version of this formula called the Multinomial coefficient:
 
 $$\binom{n}{w, l, t} = \frac{n!}{w! \cdot l! \cdot t!}$$
 
