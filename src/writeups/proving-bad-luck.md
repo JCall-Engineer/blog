@@ -890,9 +890,11 @@ Starting at node `(75, 10)`, there are 3 possible transitions:
 - $(75, 10) \xrightarrow{T} (74, 9)$
 - $(75, 10) \xrightarrow{L} (73, 10)$
 
+This branching continues from every state until someone runs out of troops. From `(75, 8)` you'd have three more branches, and from `(74, 9)` three more, and so on. The full map grows enormous very quickly --- making computationally solving this still appealing compared to doing it by hand.
+
 To calculate probabilities, we trace paths through this network. As we travel from one node to the next, we multiply the probability weight of each edge we cross - just like adding up travel times on a road trip. To find the total probability of reaching a destination, we sum this product over all possible paths that lead there.
 
-One problem: naively traversing this DAG by enumerating every path is $O(3^{A+D})$ (3 edges from every node, A+D depth) because there are **multiple** paths from `(75, 10)` to any destination that require revisiting nodes many times to sum over all paths (yes, dynamic programming could handle this, but hold your pitchforks --- I'm leading somewhere better). I actually implemented the naive approach before realizing how ridiculous it was and that it was never going to finish. But the conceptualization of this DAG still helps us develop a mathematical model for it.
+One problem: if we tried to trace every possible path through this DAG --- even computationally ---, the number of paths explodes exponentially: 3 choices at (almost) every step, repeated over 85 total troops --- in computer science terms, this is $O(3^{A+D})$ time complexity.We'd need to enumerate roughly $3^{85} \approx 3.6 \times 10^{40}$ paths, many visiting the same states repeatedly. Yes, dynamic programming could handle this, but hold your pitchforks --- I'm leading somewhere better. I actually implemented the naive approach before realizing how ridiculous it was and that it was never going to finish. But the conceptualization of this DAG still helps us develop a mathematical model for it.
 
 We sum over paths until we reach the following boundary transitions:
 
