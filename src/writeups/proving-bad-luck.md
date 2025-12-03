@@ -874,19 +874,23 @@ After running well over a trillion simulations on my GPU, I had strong empirical
 
 The key insight was that Risk combat, despite feeling random, follows a completely deterministic probability tree. Every battle state (attackers, defenders) has exact, calculable probabilities of transitioning to other states. This meant I could build a mathematical model to compute the exact probability - no sampling required.
 
-In order to conceptualize this problem let's imagine a DAG (Directed Acyclic Graph) where the nodes are labeled `(A, D)` where A is the number of attackers, and D is the number of defenders. The edges between two nodes is the probability of that transition which we can label: W, L, and T. Recall from [the probability space of Risk](#the-probability-space-of-risk) that the probabilities for a Win, Loss, or Tie are as follows:
+To conceptualize this problem, I use what computer scientists call a DAG (Directed Acyclic Graph). Think of it like a road map where you're trying to find routes between cities. Cities are dots (nodes), roads connecting them are arrows (edges), and each road has some weight - maybe travel time or distance. The "directed" part means roads go one-way, "acyclic" means you can't drive in circles, and "graph" is just the formal term for this network structure.
 
-- $P(W) = \frac{2890}{7776}$
-- $P(T) = \frac{2611}{7776}$
-- $P(L) = \frac{2275}{7776}$
+For Risk battles, each node is a battle state `(A, D)` - attackers and defenders remaining. Each edge is a dice roll outcome labeled W, T, or L. Recall from [the probability space of Risk](#the-probability-space-of-risk) that these transitions have the following probabilities:
 
-We imagine starting at a node `(75, 10)`, which has 3 transitions:
+- $P(W) = \frac{2890}{7776}$ - defenders lose 2 troops (attacker wins)
+- $P(T) = \frac{2611}{7776}$ - each side loses 1 troop (tie)
+- $P(L) = \frac{2275}{7776}$ - attackers lose 2 troops (attacker loses)
+
+Just like you can't drive backwards to a city you've already left, you can't regain troops in combat - the graph only flows one direction toward lower troop counts.
+
+Starting at node `(75, 10)`, there are 3 possible transitions:
 
 - $(75, 10) \xrightarrow{W} (75, 8)$
 - $(75, 10) \xrightarrow{T} (74, 9)$
 - $(75, 10) \xrightarrow{L} (73, 10)$
 
-Now imagine traveling along this DAG. We would multiply the weight of every edge as we move from one node to the next, thereby computing the probability of each specific path through the graph. Then we would sum that product over all possible paths to compute the total probability of reaching any given state.
+To calculate probabilities, we trace paths through this network. As we travel from one node to the next, we multiply the probability weight of each edge we cross - just like adding up travel times on a road trip. To find the total probability of reaching a destination, we sum this product over all possible paths that lead there.
 
 One problem: naively traversing this DAG by enumerating every path is $O(3^{A+D})$ (3 edges from every node, A+D depth) because there are **multiple** paths from `(75, 10)` to any destination that require revisiting nodes many times to sum over all paths (yes, dynamic programming could handle this, but hold your pitchforks --- I'm leading somewhere better). I actually implemented the naive approach before realizing how ridiculous it was and that it was never going to finish. But the conceptualization of this DAG still helps us develop a mathematical model for it.
 
