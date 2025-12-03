@@ -1159,6 +1159,8 @@ What are the key insights we can gain from this?
 - Two T-edges (`TT`) are functionally equivalent to one W-edge and one L-edge (`WL`), since both result in $|\Delta A| = 2, |\Delta D| = 2$
 - If $|\Delta A|$ is odd (equivalently, if $|\Delta D|$ is odd due to parity), there must be an odd number of T-edges (at least one), since W and L only change A or D by even amounts
 
+**In plain English:** Two states can only connect if an even number of total troops were lost, paths between them don't care what order the dice rolls happen in, and certain combinations of win/lose/tie outcomes produce identical net results.
+
 Developing a general formula (for valid cases) using as variables:
 
 - E: The number of edges
