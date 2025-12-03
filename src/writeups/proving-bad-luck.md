@@ -905,7 +905,7 @@ We sum over paths until we reach the following boundary transitions:
 - $(3, 2) \xrightarrow{T} (2, 1)$
 - $(3, 2) \xrightarrow{L} (1, 2)$
 
-These are the states where we can no longer roll the full 3v2 configuration, requiring a different probability model. At which point, we have 2 choices:
+These are the states where we can no longer roll the full 3v2 configuration, requiring a different probability model. In other words: *these are the edges of our map where the rules change*. At which point, we have 2 choices:
 
 - Ignore the remainder knowing that the error term is ridiculously small at that point (you can even derive an upper bound for the error)
 - Recompute the probability space for fewer dice and finish those final tail ends (exact solution, more complex)
