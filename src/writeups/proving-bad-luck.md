@@ -1177,8 +1177,10 @@ W &\in \left\{w : w \equiv \frac{|\Delta D| - |\Delta A|}{2} \pmod{2}, 0 \leq w 
 L &\in \left\{l : l \equiv \frac{|\Delta A| - |\Delta D|}{2} \pmod{2}, 0 \leq l \leq E\right\} \\
 T &\in \left\{t : t \equiv |\Delta A| \pmod{2}, 0 \leq t \leq E\right\} \\
 \\
-\text{Paths} &= \{(W, L, T) \mid W + L + T = E, \\
-&\quad\text{where } W, L, T \text{ satisfy the constraints above}\}
+\text{Paths} &= \left\{\begin{aligned}
+&(W, L, T) \mid W + L + T = E, \\
+&\text{where } W, L, T \text{ satisfy the constraints above}
+\end{aligned}\right\}
 \end{aligned}
 $$
 
