@@ -1182,7 +1182,7 @@ $$
 
 If you glazed over those equations, don't worry! Because now that I've finished showing off my ability to render them on my blog, we're going to (mostly) ignore all that (sorry not sorry). The important part is that `WL` can be replaced by `TT` and we have to count how many ways there are to arrange a certain sequence of edges, that's all that really matters. We can computationally iterate through pairs of `WL` much cheaper than traversing the graph.
 
-Here's the key insight that makes this tractable: we don't need to trace every path individually. Just like you can calculate how many ways to rearrange the letters in "APPLE" without listing them all ($\frac{5!}{2! \times 1! \times 1!} = 60$, accounting for the two P's), we can count battle paths mathematically. If we know we need to go from `(75, 10)` to `(70, 5)`, we just need to count how many ways to arrange the W's, T's, and L's that get us there. If you've taken a statistics or probability course you might be aware of the general formula for permutations:
+Here's the key insight that makes this tractable: we don't need to trace every path individually. Just like you can calculate how many ways to rearrange the letters in "APPLE" without listing them all ($\frac{5!}{2!} = 60$, accounting for the two P's), we can count battle paths mathematically. If we know we need to go from `(75, 10)` to `(70, 5)`, we just need to count how many ways to arrange the W's, T's, and L's that get us there. If you've taken a statistics or probability course you might be aware of the general formula for permutations:
 
 $$P_n^m = \frac{n!}{(n - m)!}$$
 
