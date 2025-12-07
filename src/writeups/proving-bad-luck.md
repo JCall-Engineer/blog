@@ -25,6 +25,7 @@ People don't take it seriously when I say I'm unlucky (I mean, fair, they should
 - I had 3 strokes before the age of 30, one of them while on blood thinners
 - When driving, *every* traffic light turns red as I approach a **disproportionately** high percentage of the time (like 80-90%)
 - When playing D&D *very consistently* I will roll nat 20s when it doesn't matter (animal handling an Ochre Jelly, initiative), and sub-10 when it matters a lot (an attack roll against a 1hp boss about to wipe our party)
+- When playing *Magic: The Gathering* I consistently flood out drawing 15+ lands in 20 cards while running card draw engines, **or** get mana screwed on 2 lands for 8 turns straight with 23-land decks - the shuffler ensures I experience both extremes regardless of deck construction. The only deck that doesn't get mangled by RNG is one I specifically engineered to make it borderline impossible to get screwed
 - When playing *Settlers of Catan* I usually am able to build on all but one of 4, 5, 6, 8, 9, and 10. Whichever one I don't build on will get rolled twice as often as any of the others *consistently* (I have receipts)
 - And then, *worst of all*, there was **that one game** of Risk
 
