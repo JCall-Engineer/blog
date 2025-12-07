@@ -1502,7 +1502,7 @@ Consider flipping a fair coin 10 times. ***Every*** sequence of heads/tails you 
 
 This matters for Risk. I know I lost roughly 75 attackers against roughly 10 defenders. But I didn't record the exact final state. And even if I had, asking "what's the probability of ending at exactly (0, 10)?" is like asking about that specific coin sequence: technically improbable, but not particularly informative. So what should I actually calculate?
 
-### Validating Simulation
+### Question 1: Was Our Simulation Accurate?
 
 One goal of calculating exact probabilities is so that we can validate that our simulations reflect reality --- as opposed to a reflection of bias in the random number generation. The simulations tracked outcomes by troops lost: starting at `(75, 10)`, they recorded how many attackers remained when either side hit zero. We can calculate this exact distribution:
 
@@ -1529,10 +1529,45 @@ def from_start_losing_n(attackers = 75, defenders = 10) -> list[Fraction]:
 	return output
 ```
 
-This gives us the theoretical distribution to compare against our simulated results. I've kept y'all waiting long enough, here are
+This generates the theoretical probability for each possible outcome when starting at (75, 10). Here's what we get:
 
-### The Results: Visualized
+```text
+ 0 attackers lost 7.091007654676880e-03  |   1 attackers lost 2.113236488014618e-02  |   2 attackers lost 3.907519068246604e-02  |   3 attackers lost 5.900297974518066e-02  |   4 attackers lost 7.673136287034671e-02
+ 5 attackers lost 8.714604322273829e-02  |   6 attackers lost 9.596811247328206e-02  |   7 attackers lost 9.237774510602273e-02  |   8 attackers lost 9.200110209346693e-02  |   9 attackers lost 7.931639879015041e-02
+10 attackers lost 7.378194050104374e-02  |  11 attackers lost 5.874852392255586e-02  |  12 attackers lost 5.200042201034394e-02  |  13 attackers lost 3.897852828327020e-02  |  14 attackers lost 3.321752993111310e-02
+15 attackers lost 2.374124435797269e-02  |  16 attackers lost 1.963528570924885e-02  |  17 attackers lost 1.350205154891221e-02  |  18 attackers lost 1.089895328354173e-02  |  19 attackers lost 7.258406739453847e-03
+20 attackers lost 5.742384091149988e-03  |  21 attackers lost 3.722321556219668e-03  |  22 attackers lost 2.895408333604051e-03  |  23 attackers lost 1.833931345819423e-03  |  24 attackers lost 1.406040074745250e-03
+25 attackers lost 8.728920979895531e-04  |  26 attackers lost 6.609167905284777e-04  |  27 attackers lost 4.031622992428995e-04  |  28 attackers lost 3.019443303978997e-04  |  29 attackers lost 1.813495531568894e-04
+30 attackers lost 1.345207313334673e-04  |  31 attackers lost 7.968411021582292e-05  |  32 attackers lost 5.860563682162067e-05  |  33 attackers lost 3.428734242976594e-05  |  34 attackers lost 2.502593738094581e-05
+35 attackers lost 1.447846063250603e-05  |  36 attackers lost 1.049546832671149e-05  |  37 attackers lost 6.010656422665993e-06  |  38 attackers lost 4.330220214742593e-06  |  39 attackers lost 2.457011687231331e-06
+40 attackers lost 1.760152552028555e-06  |  41 attackers lost 9.902920424553257e-07  |  42 attackers lost 7.057896844485577e-07  |  43 attackers lost 3.940039581656058e-07  |  44 attackers lost 2.794914239647966e-07
+45 attackers lost 1.549056896926800e-07  |  46 attackers lost 1.094096185974364e-07  |  47 attackers lost 6.023646784630196e-08  |  48 attackers lost 4.237533257642016e-08  |  49 attackers lost 2.318613469117945e-08
+50 attackers lost 1.625086486902520e-08  |  51 attackers lost 8.840713950314471e-09  |  52 attackers lost 6.175115427296878e-09  |  53 attackers lost 3.341313291769491e-09  |  54 attackers lost 2.326417738038611e-09
+55 attackers lost 1.252479001722184e-09  |  56 attackers lost 8.694537766269946e-10  |  57 attackers lost 4.658811007591382e-10  |  58 attackers lost 3.225079646137759e-10  |  59 attackers lost 1.720432664601726e-10
+60 attackers lost 1.187868095562462e-10  |  61 attackers lost 6.310241455589822e-11  |  62 attackers lost 4.346209528909065e-11  |  63 attackers lost 2.299700000015155e-11  |  64 attackers lost 1.580275704733152e-11
+65 attackers lost 8.330476548384317e-12  |  66 attackers lost 5.711970659843091e-12  |  67 attackers lost 3.000443742934830e-12  |  68 attackers lost 2.053093370951024e-12  |  69 attackers lost 1.074855396090207e-12
+70 attackers lost 7.340551849459386e-13  |  71 attackers lost 3.830761040511117e-13  |  72 attackers lost 2.611341839386566e-13  |  73 attackers lost 1.145165351459735e-13  |  74 attackers lost 4.759848764969695e-14
+75 attackers lost 1.902116797727363e-13  |
+```
 
-![Bar chart comparing normalized probability distributions across attackers lost (0-75) - for CPU 100m simulations, CUDA 1t simulations, and theoretical calculations - showing close agreement with minor deviations in CUDA around the peak region of 5-10 attackers lost](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/normalized_bins.png)
-![Line graph showing cumulative probability reaching 1.0 around 25 attackers lost, with CPU, CUDA, and theoretical curves nearly overlapping throughout](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/cumulative.png)
-![Log-scale scatter plot showing probability distribution from 10^-2 to 10^-13, with simulation results matching theoretical probabilities across 12 orders of magnitude down to the extreme tail at 75 attackers lost](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/log.png)
+Now we can compare this against our simulations:
+
+#### The Results: Visualized
+
+![Normalized Distribution Graph](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/normalized_bins.png)
+
+The theoretical curve peaks around 6-8 attackers lost with a characteristic asymmetric shape --- notice how the slope alternates between steep and shallow steps, a direct consequence of Risk's mechanics where ties (both sides lose 1 troop) occur ~34% of the time in 3v2 combat, while decisive outcomes (one side loses 2 troops) dominate the other ~66%.
+
+The CPU simulation with 100 million trials tracks the theoretical curve remarkably well through the main distribution but lacks the sample size to capture outcomes beyond ~50 attackers lost. The CUDA simulation with 1 trillion trials extends deep into the tail, though it exhibits slight oscillations in the 4-10 range --- likely a counting artifact in the histogram aggregation, as evidenced by the total summing to 1,000,000,192,512 rather than exactly 1 trillion. Despite this minor systematic error, both simulations validate the theoretical distribution: the probability drops below 1% after ~20 attackers lost and becomes vanishingly small beyond 25.
+
+![Cumulative Distribution Graph](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/cumulative.png)
+
+The cumulative distribution shows how quickly probability mass concentrates in the likely outcomes. All three approaches converge to essentially the same curve --- by 25 attackers lost, we've accounted for over 99.9% of all possible outcomes. The CUDA simulation shows a slight deviation from the theoretical curve (visible as a small gap between the lines), consistent with the counting artifacts we saw in the normalized distribution. However, the deviation remains small throughout: the simulations successfully capture both the central tendency and the overall probability structure, confirming our random number generation reflects the true underlying distribution.
+
+![Log Scale Graph](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/log.png)
+
+The log scale reveals the true test of our models: matching probabilities across 12 orders of magnitude, from common outcomes in the single digit percentages ($$\approx10^{-2}$$) down to events so rare they'd occur roughly once in 10 trillion games. The theoretical curve extends smoothly into this extreme tail, predicting probabilities as small as $$10^{-13}$$ with exact precision.
+
+The CPU simulation tracks the theoretical probabilities faithfully until around 40 attackers lost, where limited sample size causes it to overestimate the tail probabilities before disappearing entirely at 51 losses --- it simply never observed outcomes beyond that point in 100 million trials. The CUDA simulation extends much further but shows systematic deviation: it undercounts outcomes in the 0-10 range (explaining the gap in the cumulative distribution), which compounds into progressively larger errors in the tail. Our initial observation of "4 defeats in 1 trillion simulations" turns out to be anomalously high --- the true probability of losing all 75 attackers is $$1.9\times10^{-13}$$, meaning we should expect total defeat roughly once every 5 trillion games.
+
+Notice the spike at 75 attackers lost, where probability jumps above 74 and even 73. This isn't a bug --- it's real. That single data point represents the sum of 10 different defeat scenarios (ending with 1--10 defenders remaining), and losing with 1-2 attackers is actually *more likely* than barely winning when the dice strongly favor defenders at low troop counts. The aggregate of all defeat states exceeds the probability of any single "barely won" outcome.
