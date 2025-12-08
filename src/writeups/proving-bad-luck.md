@@ -1702,6 +1702,10 @@ function computeProbability(start, end) {
 
 .risk-calculator .result {
 	margin-top: 1rem;
+	border-radius: 4px;
+}
+
+.risk-calculator .result > div {
 	padding: 1rem;
 	background: var(--main-bg-primary);
 	border-radius: 4px;
@@ -1726,9 +1730,9 @@ Here you can play with the calculator yourself.
 		<label>Defenders: <input type="number" data-input="endD" value="10" min="0"></label>
 	</fieldset>
 	<button type="submit">Calculate Probability</button>
-	<fieldset class="result" data-output="result">
+	<fieldset class="result">
 		<legend>Results</legend>
-		Enter values and click Calculate
+		<div data-output="result">Enter values and click Calculate</div>
 	</fieldset>
 	<footer style="font-size: 0.9em; opacity: 0.8; margin-top: 1rem;">
 		<em>Yes, this is actually computing exact probabilities using BigInt arithmetic in your browser. Yes, I am aware this is overkill. No, I will not be taking questions at this time. (No input limits - go wild, but 500+ armies might make your browser think for a moment. Probabilities for 100+ troops may be too small for floating point and show up as NaN.)</em>
