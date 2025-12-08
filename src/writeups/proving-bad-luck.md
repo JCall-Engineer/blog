@@ -1674,6 +1674,18 @@ function computeProbability(start, end) {
 	background: var(--main-bg-accent);
 }
 
+.risk-calculator fieldset {
+	border: 1px solid var(--main-text-color);
+	border-radius: 4px;
+	padding: 1rem;
+	margin: 1rem 0;
+}
+
+.risk-calculator legend {
+	padding: 0 0.5rem;
+	font-weight: bold;
+}
+
 .risk-calculator input {
 	width: 80px;
 	padding: 0.5rem;
@@ -1694,27 +1706,34 @@ function computeProbability(start, end) {
 	background: var(--main-bg-primary);
 	border-radius: 4px;
 	font-family: monospace;
+	word-break: break-all;
+	overflow-wrap: break-word;
 }
 </style>
 
 Here you can play with the calculator yourself.
 
-<div class="risk-calculator" data-calculator="traverse-probability">
+<form class="risk-calculator" data-calculator="traverse-probability">
 	<h3>Risk Battle Calculator</h3>
-	<div>
-		<label>Attackers: <input type="number" data-input="startA" value="75" min="1" max="100"></label>
-		<label>Defenders: <input type="number" data-input="startD" value="10" min="1" max="100"></label>
-	</div>
-	<div>
-		<label>End Attackers: <input type="number" data-input="endA" value="0" min="0" max="100"></label>
-		<label>End Defenders: <input type="number" data-input="endD" value="10" min="0" max="100"></label>
-	</div>
-	<button data-action="calculate">Calculate Probability</button>
-	<div class="result" data-output="result">Enter values and click Calculate</div>
-	<div style="font-size: 0.9em; opacity: 0.8; margin-top: 1rem;">
-		<em>Yes, this is actually computing exact probabilities using BigInt arithmetic in your browser. Yes, I am aware this is overkill. No, I will not be taking questions at this time.</em>
-	</div>
-</div>
+	<fieldset>
+		<legend>Start</legend>
+		<label>Attackers: <input type="number" data-input="startA" value="75" min="1"></label>
+		<label>Defenders: <input type="number" data-input="startD" value="10" min="1"></label>
+	</fieldset>
+	<fieldset>
+		<legend>End</legend>
+		<label>Attackers: <input type="number" data-input="endA" value="0" min="0"></label>
+		<label>Defenders: <input type="number" data-input="endD" value="10" min="0"></label>
+	</fieldset>
+	<button type="submit">Calculate Probability</button>
+	<fieldset class="result" data-output="result">
+		<legend>Results</legend>
+		Enter values and click Calculate
+	</fieldset>
+	<footer style="font-size: 0.9em; opacity: 0.8; margin-top: 1rem;">
+		<em>Yes, this is actually computing exact probabilities using BigInt arithmetic in your browser. Yes, I am aware this is overkill. No, I will not be taking questions at this time. (No input limits - go wild.)</em>
+	</footer>
+</form>
 
 <script>
 function setupCalculator(calculatorId, computeFn) {
@@ -1729,7 +1748,8 @@ function setupCalculator(calculatorId, computeFn) {
 		if (element) element.innerHTML = html;
 	};
 
-	container.querySelector('[data-action="calculate"]').addEventListener('click', () => {
+	container.addEventListener('submit', (e) => {
+		e.preventDefault();
 		setOutput('result', 'Calculating...');
 		setTimeout(() => {
 			try {
