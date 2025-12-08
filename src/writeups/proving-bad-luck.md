@@ -1731,7 +1731,7 @@ Here you can play with the calculator yourself.
 		Enter values and click Calculate
 	</fieldset>
 	<footer style="font-size: 0.9em; opacity: 0.8; margin-top: 1rem;">
-		<em>Yes, this is actually computing exact probabilities using BigInt arithmetic in your browser. Yes, I am aware this is overkill. No, I will not be taking questions at this time. (No input limits - go wild.)</em>
+		<em>Yes, this is actually computing exact probabilities using BigInt arithmetic in your browser. Yes, I am aware this is overkill. No, I will not be taking questions at this time. (No input limits - go wild, but 500+ armies might make your browser think for a moment. Probabilities for 100+ troops may be too small for floating point and show up as NaN.)</em>
 	</footer>
 </form>
 
