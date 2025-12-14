@@ -218,7 +218,8 @@ The shared progress counter uses a lock to prevent multiple cores from updating 
 
 #### The Results
 
-Here is what 1 million simulations looks like:
+<details open>
+<summary><strong>Results for 1 Million Simulations</strong></summary>
 
 ```text
 CPU distribution:
@@ -240,6 +241,8 @@ CPU distribution:
 75 attackers lost               0  |
 Sanity Check - total events:       1,000,000 (correct)
 ```
+
+</details>
 
 The key thing to notice: not a single simulation lost more than 43 attackers. Out of a **million** tries (which took 12.1 seconds to run). And the scaling problem became *painfully* clear:
 
@@ -800,6 +803,9 @@ Testing FastPath with
 
 This represents a puzzle that remains unsolved. I would love to really get to the bottom of this but it is quickly becoming a blackbox problem and I'm not really willing to break out the Oscilloscope. Let's roll back some of this profiling nonsense and just see what the results actually look like shall we?
 
+<details>
+<summary><strong>Results for 100 Billion Simulations</strong></summary>
+
 ```text
 Running CUDA-N100b-A75-D10 simulation...
 Progress: 100.00% - Elapsed: 26.0s - Remaining: 0.0s
@@ -825,12 +831,17 @@ CUDA distribution:
 Sanity Check - total events: 100,000,595,968 (incorrect)
 ```
 
-Good news: we are now showing as many as 69 attackers (nice) This means we're getting close to capturing how statistically unlikely this cursed game of Risk was.  
-Bad news: I do not like that it is reporting more simulations than the target (I like the number to be exact). Unfortunately, at this point I had been at it for several hours (days even) and was at my limit: I called this "good enough".
+</details>
+
+Good news: we are now showing as many as 69 attackers (nice) lost. This means we're getting close to capturing how statistically unlikely this cursed game of Risk was.  
+Bad news: I do not like that it is reporting more simulations than the target (I like the number to be exact, and inexactness could suggest counting errors). Unfortunately, at this point I had been at it for several hours (days even) and was at my limit: I called this "good enough".
 
 ### The Big 1 Trillion
 
 I did a quick test for SPT above 16384, it seems that (at least on my device) that is the limit for performance gains, any higher seems to have no effect on the runtime. I had expected it to eventually increase runtime from less parallelization, but it seems there are other bottlenecks that play a bigger role. That said, I believe we are at or near a point of diminishing returns in sleuthing out. It's time for some answers, we'll proceed with a block size of 32 threads and 16384 SPT. And the results are glorious!
+
+<details>
+<summary><strong>Results for 1 Trillion Simulations</strong></summary>
 
 ```text
 Running CUDA-N1t-A75-D10 simulation...
@@ -856,6 +867,8 @@ CUDA distribution:
 75 attackers lost               4  |
 Sanity Check - total events: 1,000,000,192,512 (incorrect)
 ```
+
+</details>
 
 **Four in a trillion.** ***FOUR*** in one ***TRILLION***!
 
@@ -1029,6 +1042,25 @@ const FactorialCache = (() => {
 	};
 })();
 
+function bigIntToFloat(x) {
+	if (x === 0n) return 0;
+
+	let neg = x < 0n;
+	if (neg) x = -x;
+
+	// bit length
+	let bits = x.toString(2).length;
+
+	// extract the top 53 bits (mantissa width)
+	let shift = bits - 53;
+	let mantissa = Number(x >> BigInt(shift));
+
+	// assemble float
+	let result = mantissa * 2 ** shift;
+
+	return neg ? -result : result;
+}
+
 class Fraction {
 	constructor(numerator, denominator = 1n) {
 		this.n = BigInt(numerator);
@@ -1077,7 +1109,7 @@ class Fraction {
 	}
 
 	toFloat() {
-		return Number(this.n) / Number(this.d);
+		return bigIntToFloat(this.n) / bigIntToFloat(this.d);
 	}
 
 	toString() {
@@ -1672,46 +1704,52 @@ function computeProbability(start, end) {
 	border: 2px solid var(--main-text-color);
 	border-radius: 8px;
 	background: var(--main-bg-accent);
-}
 
-.risk-calculator fieldset {
-	border: 1px solid var(--main-text-color);
-	border-radius: 4px;
-	padding: 1rem;
-	margin: 1rem 0;
-}
+	fieldset {
+		border: 1px solid var(--main-text-color);
+		border-radius: 4px;
+		padding: 1rem;
+		margin: 1rem 0;
+	}
 
-.risk-calculator legend {
-	padding: 0 0.5rem;
-	font-weight: bold;
-}
+	legend {
+		padding: 0 0.5rem;
+		font-weight: bold;
+	}
 
-.risk-calculator input {
-	width: 80px;
-	padding: 0.5rem;
-	margin: 0.5rem;
-	font-size: 1rem;
-}
+	input {
+		width: 80px;
+		padding: 0.5rem;
+		margin: 0.5rem;
+		font-size: 1rem;
+	}
 
-.risk-calculator button {
-	padding: 0.5rem 1rem;
-	margin: 0.5rem;
-	font-size: 1rem;
-	cursor: pointer;
-}
+	button {
+		padding: 0.5rem 1rem;
+		margin: 0.5rem;
+		font-size: 1rem;
+		cursor: pointer;
+	}
 
-.risk-calculator .result {
-	margin-top: 1rem;
-	border-radius: 4px;
-}
+	.result {
+		margin-top: 1rem;
+		border-radius: 4px;
 
-.risk-calculator .result > div {
-	padding: 1rem;
-	background: var(--main-bg-primary);
-	border-radius: 4px;
-	font-family: monospace;
-	word-break: break-all;
-	overflow-wrap: break-word;
+		& > div {
+			padding: 1rem;
+			background: var(--main-bg-primary);
+			border-radius: 4px;
+			font-family: monospace;
+			word-break: break-all;
+			overflow-wrap: break-word;
+		}
+	}
+
+	footer {
+		font-size: 0.9em;
+		opacity: 0.8;
+		margin-top: 1rem;
+	}
 }
 </style>
 
@@ -1734,13 +1772,13 @@ Here you can play with the calculator yourself.
 		<legend>Results</legend>
 		<div data-output="result">Enter values and click Calculate</div>
 	</fieldset>
-	<footer style="font-size: 0.9em; opacity: 0.8; margin-top: 1rem;">
-		<em>Yes, this is actually computing exact probabilities using BigInt arithmetic in your browser. Yes, I am aware this is overkill. No, I will not be taking questions at this time. (No input limits - go wild, but 500+ armies might make your browser think for a moment. Probabilities for 100+ troops may be too small for floating point and show up as NaN.)</em>
+	<footer>
+		<em>Yes, this is actually computing exact probabilities using BigInt arithmetic in your browser. Yes, I am aware this is overkill. No, I will not be taking questions at this time. (No input limits - go wild, but 500+ armies might make your browser think for a moment.)</em>
 	</footer>
 </form>
 
 <script>
-function setupCalculator(calculatorId, computeFn) {
+function setupCalculator(calculatorId, computeFn, loadingHTML = 'Calculating...') {
 	const container = document.querySelector(`[data-calculator="${calculatorId}"]`);
 	if (!container) return;
 
@@ -1754,7 +1792,7 @@ function setupCalculator(calculatorId, computeFn) {
 
 	container.addEventListener('submit', (e) => {
 		e.preventDefault();
-		setOutput('result', 'Calculating...');
+		setOutput('result', loadingHTML);
 		setTimeout(() => {
 			try {
 				const result = computeFn({ getInput, setInput, setOutput });
@@ -1805,8 +1843,10 @@ def paths_union(start: Node, ends: list[Node]):
 
 If I could reasonably claim it, I would love to claim to be the world's foremost advocate of Test-Driven-Development (TDD). And this is exactly the time to use it! I often write more lines of code in tests than in the implementation --- regrettably, this isn’t one of those cases, which means you’ll have to take my word for it. But the functions `constant_space_probability` and `compute_probability` represent a significant chunk of non-obvious code with predictable expectations. Here are the test cases this code passes:
 
-```python
+<details>
+<summary><strong>Unit Test Code</strong></summary>
 
+```python
 import unittest
 class TestProbabilities(unittest.TestCase):
 	def test_crossing_space(self):
@@ -1918,6 +1958,8 @@ Ran 3 tests in 0.557s
 OK
 ```
 
+</details>
+
 ## The Question Matters More Than the Answer
 
 Having a precise calculator doesn't guarantee insight --- understanding what makes a probability meaningful is the difference between measuring something real and simply staring at impressive-looking numbers.
@@ -1953,7 +1995,10 @@ def from_start_losing_n(attackers = 75, defenders = 10) -> list[Fraction]:
 	return output
 ```
 
-This generates the theoretical probability for each possible outcome when starting at (75, 10). Here's what we get:
+This generates the theoretical probability for each possible outcome when starting at (75, 10).
+
+<details>
+<summary><strong>Theoretical Distribution Table (75 attackers vs 10 defenders)</strong></summary>
 
 ```text
  0 attackers lost 7.091007654676880e-03  |   1 attackers lost 2.113236488014618e-02  |   2 attackers lost 3.907519068246604e-02  |   3 attackers lost 5.900297974518066e-02  |   4 attackers lost 7.673136287034671e-02
@@ -1973,6 +2018,91 @@ This generates the theoretical probability for each possible outcome when starti
 70 attackers lost 7.340551849459386e-13  |  71 attackers lost 3.830761040511117e-13  |  72 attackers lost 2.611341839386566e-13  |  73 attackers lost 1.145165351459735e-13  |  74 attackers lost 4.759848764969695e-14
 75 attackers lost 1.902116797727363e-13  |
 ```
+
+</details>
+
+<style>
+.distribution-table {
+	tbody {
+		display: block;
+		max-height: 450px;
+		overflow-y: auto;
+	}
+
+	thead,
+	tbody tr {
+		display: table;
+		width: 100%;
+		table-layout: fixed;
+	}
+}
+</style>
+
+<form class="risk-calculator" data-calculator="distribution">
+	<h3>Battle Outcome Distribution Calculator</h3>
+	<fieldset>
+		<legend>Starting Position</legend>
+		<label>Attackers: <input type="number" data-input="attackers" value="75" min="1"></label>
+		<label>Defenders: <input type="number" data-input="defenders" value="10" min="1"></label>
+	</fieldset>
+	<button type="submit">Calculate Distribution</button>
+	<fieldset class="result">
+		<legend>Probability Distribution</legend>
+		<table class="distribution-table">
+			<thead>
+				<tr>
+					<th>Attackers Lost</th>
+					<th>Probability</th>
+				</tr>
+			</thead>
+			<tbody data-output="result">
+				<tr><td colspan="2">Calculating...</td></tr>
+			</tbody>
+		</table>
+	</fieldset>
+</form>
+
+<script>
+function computeDistribution(attackers, defenders) {
+	const start = new Node(attackers, defenders);
+	const distribution = Array(attackers + 1).fill(new Fraction(0n));
+
+	for (let attackersLeft = 1; attackersLeft <= attackers; attackersLeft++) {
+		const attackersLost = attackers - attackersLeft;
+		distribution[attackersLost] = computeProbability(start, new Node(attackersLeft, 0));
+	}
+
+	for (let defendersLeft = 1; defendersLeft <= defenders; defendersLeft++) {
+		distribution[attackers] = distribution[attackers].add(
+			computeProbability(start, new Node(0, defendersLeft))
+		);
+	}
+
+	return distribution;
+}
+
+setupCalculator('distribution', ({ getInput }) => {
+	const attackers = getInput('attackers');
+	const defenders = getInput('defenders');
+
+	try {
+		const distribution = computeDistribution(attackers, defenders);
+		return distribution.map((prob, i) => `\
+			<tr>
+				<td>${i}</td>
+				<td>${prob.toFloat().toExponential(4)}</td>
+			</tr>`
+		).join('');
+	} catch (e) {
+		return `<tr><td colspan="2">Error: ${e.message}</td></tr>`;
+	}
+}, '<tr><td colspan="2">Calculating...</td></tr>');
+
+// Calculate (75, 10) on page load
+window.addEventListener('DOMContentLoaded', () => {
+	document.querySelector('[data-calculator="distribution"]')?.dispatchEvent(new Event('submit'));
+});
+</script>
 
 Now we can compare this against our simulations:
 
