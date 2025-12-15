@@ -4,6 +4,14 @@ description: "A blog that lives and breathes. I write about policy, code, and id
 tags: []
 ---
 
+## Who I Am
+
+I'm John Call. I studied Electrical Engineering at Utah State University --- a wildly diverse field I'm passionate about. As I was finishing my undergraduate degree in 2019, I had a stroke that dramatically altered my trajectory.
+
+I've spent the years since navigating a constellation of chronic health conditions --- some diagnosed, some still being investigated. These conditions limit my energy and cognitive capacity in ways that aren't always predictable. That means this blog won't release new articles on a regular schedule, but as time and energy permit. Some posts take me months to finish.
+
+Those constraints shape how I work. I've learned to approach my health challenges the way I approach engineering problems --- systematically, with data and iteration. It doesn't always work, but it's helped me build systems that let me function within my limitations and still produce work I care about.
+
 ## A Letter Sparked This Site
 
 In April 2025, I sent a letter to one of my senators about the state of healthcare in America. It was a letter I’d spent real time crafting---researched, structured, and deeply personal. But as I was preparing to publish it online and share it more broadly, I caught a mistake in one of my sources.
