@@ -15,11 +15,11 @@ Those constraints shape how I work. I've learned to approach my health challenge
 
 ## A Letter Sparked This Site
 
-In April 2025, I sent a letter to one of my senators about the state of healthcare in America. It was a letter I’d spent real time crafting---researched, structured, and deeply personal. But as I was preparing to publish it online and share it more broadly, I caught a mistake in one of my sources.
+In April 2025, I sent a letter to one of my senators about the state of healthcare in America. It was a letter I’d spent real time crafting --- researched, structured, and deeply personal. But as I was preparing to publish it online and share it more broadly, I caught a mistake in one of my sources.
 
 The error was minor, but it was enough to make me pause.
 
-If I was going to share this message publicly, I needed to correct that mistake. And more importantly, I needed to do it *honestly*---in a way that didn’t try to erase the fact that a mistake had happened.
+If I was going to share this message publicly, I needed to correct that mistake. And more importantly, I needed to do it *honestly* --- in a way that didn’t try to erase the fact that a mistake had happened.
 
 That’s what sparked this entire site.
 
