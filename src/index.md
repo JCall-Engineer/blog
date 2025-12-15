@@ -1,6 +1,6 @@
 ---
-title: "Why I Built This Site, and Why I'm Not Hiding It"
-description: "A blog that lives and breathes. I write about policy, code, and ideas - with public version control so you can see how my thinking evolves."
+title: "Ideas on Git, Built to Evolve"
+description: "A blog that lives and breathes. I write about policy, code, and ideas — using Git so you can see how my thinking evolves."
 date_effective: 2025-12-14
 tags: []
 ---
