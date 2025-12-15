@@ -1,6 +1,7 @@
 ---
 title: "Why I Built This Site, and Why I'm Not Hiding It"
 description: "A blog that lives and breathes. I write about policy, code, and ideas - with public version control so you can see how my thinking evolves."
+date_effective: 2025-12-14
 tags: []
 ---
 
@@ -42,10 +43,10 @@ I write under my own name, knowing some of what I publish here is more opinionat
 
 I hold myself to professional standards: clear reasoning, intellectual honesty, and good faith engagement. But I also believe in being straightforward about what I care about and why. If that shapes how someone views my work, I can live with that.
 
-## This Site Isn’t Just for That Letter
+## What You'll Find Here
 
-This started with a message I needed to get right. But since I’d already opened the can of worms of building a site, I intend to make the most of it.
+This site started with a letter I needed to get right. But it's grown into something broader.
 
-You’ll find project documentation here. You’ll find longer essays. You’ll find technical posts, maybe the occasional guide. Over time, I expect it to grow into a space where I can explore ideas, track experiments, and share what I’ve learned in the open.
+You'll find policy essays arguing for healthcare reform. Technical writeups documenting projects I've built. Occasionally, something unhinged --- like the time I got so frustrated with my luck in a board game that I overengineered a proof of how absurd it was. The range is wide because my interests are wide, and I'm not trying to stay in a lane.
 
-But the foundation is this: I write in public, and I revise in public. Because trust isn’t built on certainty---it’s built on accountability.
+But the foundation is this: I write in public, and I revise in public. Posts evolve as my thinking does, and the version history shows exactly what changed and why. No need to take my word for anything --- check the sources, see how the ideas evolved, come to your own conclusions.
