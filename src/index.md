@@ -36,15 +36,11 @@ Every blog post is hosted on a public GitHub repository, complete with version h
 
 I want readers to know these posts *will* evolve---and to trust the transparency of those changes. If you’re curious, you can see exactly what changed and why. I make revisions because I have confidence that they are improvements---and hopefully most people reading will find that to be true.
 
-## Yes, This Might Cost Me
+## A Note on Transparency
 
-I’m fully aware that mixing personal advocacy with professional identity is generally considered risky. The safest advice for someone who wants to stay employable is to avoid taking public stances---especially on anything that could be construed as political.
+I write under my own name, knowing some of what I publish here is more opinionated than what you'd typically find in a professional portfolio. But my perspective carries weight precisely because it's rooted in lived experience --- navigating healthcare systems, managing chronic illness, and watching policy decisions play out at ground level. Abstracting that into something impersonal would strip away what makes it valuable.
 
-But here’s the thing: if someone wants to find this blog later, they will. Obscurity isn’t safety. It’s just delay.
-
-I believe my perspective is worth sharing precisely because it’s informed by personal experience---navigating the medical system, living with chronic illness, and seeing how policy plays out at ground level. Stripping that down into something sterile and abstract would defeat the point. So I’m choosing to publish under my name.
-
-I still hold myself to professional standards. I believe in ethical conduct, clear boundaries, and productive dialogue. But I also believe that pretending I don’t care about the world outside my job is dishonest. And if that honesty disqualifies me from opportunities, I’ll live with that.
+I hold myself to professional standards: clear reasoning, intellectual honesty, and good faith engagement. But I also believe in being straightforward about what I care about and why. If that shapes how someone views my work, I can live with that.
 
 ## This Site Isn’t Just for That Letter
 
