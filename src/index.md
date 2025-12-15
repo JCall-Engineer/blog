@@ -15,7 +15,7 @@ Those constraints shape how I work. I've learned to approach my health challenge
 
 ## A Letter Sparked This Site
 
-In April 2025, I sent a letter to one of my senators about the state of healthcare in America. It was a letter I’d spent real time crafting --- researched, structured, and deeply personal. But as I was preparing to publish it online and share it more broadly, I caught a mistake in one of my sources.
+In April 2025, I sent a letter to one of my senators about the state of healthcare in America. It was a letter I’d spent considerable time crafting --- researched, structured, and deeply personal. But as I was preparing to publish it online and share it more broadly, I caught a mistake in one of my sources.
 
 The error was minor, but it was enough to make me pause.
 
@@ -33,7 +33,7 @@ This site reflects that. It gives me the freedom to revise old posts as my think
 
 That's why I built this system with Git at its core instead of using something like WordPress. I wanted infrastructure that lets me correct mistakes *and* acknowledge them. Every blog post lives in a public GitHub repository, complete with version history and commit messages explaining every edit.
 
-These posts *will* evolve. I don't revise casually --- changes represent genuine refinement that I believe makes the content objectively better. If you're curious what changed and why, the full history is there.
+These posts *will* evolve. Revisions aren't arbitrary --- they correct mistakes, improve clarity, or refine reasoning. If you're curious what changed and why, the full history is there.
 
 ## A Note on Transparency
 
@@ -45,6 +45,6 @@ I hold myself to professional standards: clear reasoning, intellectual honesty, 
 
 This site started with a letter I needed to get right. But it's grown into something broader.
 
-You'll find policy essays arguing for healthcare reform. Technical writeups documenting projects I've built. Occasionally, something unhinged --- like the time I got so frustrated with my luck in a board game that I overengineered a proof of how absurd it was. The range is wide because my interests are wide, and I'm not trying to stay in a lane.
+You'll find policy essays arguing for healthcare reform. Technical writeups documenting projects I've built. Occasionally, something unhinged --- like the time I got so frustrated with my luck in a board game that I overengineered a proof of how absurd it was. The range is wide because my interests are wide, and I'm not trying to stay in a lane. That said, when it comes to controversial topics, I'm deliberate about what's worth the risk of publishing.
 
-But the foundation is this: I write in public, and I revise in public. Posts evolve as my thinking does, and the version history shows exactly what changed and why. No need to take my word for anything --- check the sources, see how the ideas evolved, come to your own conclusions.
+My blog's foundation is this: I write in public, and I revise in public. Posts evolve as my thinking does, and the version history shows exactly what changed and why. No need to take my word for anything --- check the sources, see how the ideas evolved, come to your own conclusions.
