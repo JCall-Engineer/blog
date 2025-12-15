@@ -45,6 +45,10 @@ I hold myself to professional standards: clear reasoning, intellectual honesty, 
 
 This site started with a letter I needed to get right. But it's grown into something broader.
 
-You'll find policy essays arguing for healthcare reform. Technical writeups documenting projects I've built. Occasionally, something unhinged --- like the time I got so frustrated with my luck in a board game that I overengineered a proof of how absurd it was. The range is wide because my interests are wide, and I'm not trying to stay in a lane. That said, when it comes to controversial topics, I'm deliberate about what's worth the risk of publishing.
+You'll find policy essays arguing for healthcare reform. Technical writeups documenting projects I've built. Occasionally, something unhinged --- like the time I got so frustrated with my luck in a board game that I overengineered a proof of how absurd it was.
+
+The common thread: I approach problems systematically, whether I'm analyzing healthcare policy, engineering technical solutions, or proving statistical improbability. I build things, investigate how systems work or fail, and document what I learn.
+
+The range is wide because my interests are wide. When it comes to controversial topics, I'm deliberate about what's worth the risk of publishing.
 
 My blog's foundation is this: I write in public, and I revise in public. Posts evolve as my thinking does, and the version history shows exactly what changed and why. No need to take my word for anything --- check the sources, see how the ideas evolved, come to your own conclusions.
