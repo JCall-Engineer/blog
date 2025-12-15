@@ -25,17 +25,15 @@ That’s what sparked this entire site.
 
 ## The Ethics of Revision
 
-I mess things up. Often. That’s part of the process. Honest thinking necessitates mistakes. Iteration makes them worth it.
+I mess things up. Often. But honest thinking cannot happen without the freedom to make mistakes --- iteration makes them worthwhile.
 
-I write blog posts the way I write code: expecting them to be updated. My beliefs are provisional---they earn their place by withstanding time, pressure, and scrutiny. If a belief matters, it **should** adapt to new information.
+I write blog posts the way I write code: expecting them to be updated. My beliefs are provisional --- they earn their place by withstanding time, pressure, and scrutiny. If a belief matters, it **should** adapt to new information.
 
-This site reflects that. It gives me the freedom to revise old posts as my thinking evolves---without erasing what came before or dodging accountability. I wouldn’t want to mislead others by failing to correct myself---or by burying those corrections on a separate post, disconnected from the original mistake. That would feel intellectually dishonest in the most literal sense: refusing to revise a belief when the evidence changes.
+This site reflects that. It gives me the freedom to revise old posts as my thinking evolves --- without erasing what came before. I wouldn't want to mislead others by failing to correct myself --- or by burying those corrections in a separate post, disconnected from the original mistake. That would be intellectually dishonest: refusing to revise a belief when the evidence changes.
 
-That’s why I built this system by hand instead of using something like WordPress. I wanted infrastructure that lets me correct mistakes *and* acknowledge them. I don’t want to pretend I never said something---I want to document why I changed my mind.
+That's why I built this system with Git at its core instead of using something like WordPress. I wanted infrastructure that lets me correct mistakes *and* acknowledge them. Every blog post lives in a public GitHub repository, complete with version history and commit messages explaining every edit.
 
-Every blog post is hosted on a public GitHub repository, complete with version history and commit messages explaining every edit.
-
-I want readers to know these posts *will* evolve---and to trust the transparency of those changes. If you’re curious, you can see exactly what changed and why. I make revisions because I have confidence that they are improvements---and hopefully most people reading will find that to be true.
+These posts *will* evolve. I don't revise casually --- changes represent genuine refinement that I believe makes the content objectively better. If you're curious what changed and why, the full history is there.
 
 ## A Note on Transparency
 
