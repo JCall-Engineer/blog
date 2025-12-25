@@ -2100,7 +2100,7 @@ setupCalculator('distribution', ({ getInput }) => {
 
 // Calculate (75, 10) on page load
 window.addEventListener('DOMContentLoaded', () => {
-	document.querySelector('[data-calculator="distribution"]')?.dispatchEvent(new Event('submit'));
+	document.querySelector('[data-calculator="distribution"]')?.dispatchEvent(new Event('submit', { cancelable: true }));
 });
 </script>
 
@@ -2126,4 +2126,5 @@ Notice the spike at 75 attackers lost, where probability jumps above 74 and even
 
 The CPU simulation tracks the theoretical probabilities faithfully until around 40 attackers lost, where limited sample size causes it to overestimate the tail probabilities before disappearing entirely at 51 losses --- it simply never observed outcomes beyond that point in 100 million trials. The CUDA simulation extends much further but shows systematic deviation: it undercounts outcomes in the 0-10 range (explaining the gap in the cumulative distribution), which compounds into progressively larger errors in the tail. Our initial observation of "4 defeats in 1 trillion simulations" turns out to be anomalously high --- the true probability of losing all 75 attackers is $\approx1.9\times10^{-13}$, meaning we should expect total defeat roughly once every 5 trillion games. That earlier estimate of **16 in one septillion** for the back-to-back occurrence? The theoretical probability is actually $\approx3.6\times10^{-26}$ --- that's only **3.6 in a hundred septillion**, or roughly once every 28 septillion attempts!
 
-#### See For Yourself
+### Question 2: What is the Expected Value for Troops Lost?
+
