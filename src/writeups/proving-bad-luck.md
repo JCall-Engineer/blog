@@ -2128,3 +2128,69 @@ The CPU simulation tracks the theoretical probabilities faithfully until around 
 
 ### Question 2: What is the Expected Value for Troops Lost?
 
+The simplest way to answer this question is to use our existing distribution which assumes starting at `(75, 10)`. The expected value for a distribution is simply
+
+$$
+E_X := \sum_{x} x \cdot P(X=x)
+$$
+
+Standard Deviation is a similarly useful metric to describe how much we can expect values to typically deviate from the expected value $E_X$
+
+$$
+\sigma_X := \sqrt{\sum_{x} (x - E_X)^2 \cdot P(X=x)}
+$$
+
+<form class="risk-calculator" data-calculator="expected-value">
+	<h3>Expected Value Calculator</h3>
+	<fieldset>
+		<legend>Starting Position</legend>
+		<label>Attackers: <input type="number" data-input="attackers" value="75" min="1"></label>
+		<label>Defenders: <input type="number" data-input="defenders" value="10" min="1"></label>
+	</fieldset>
+	<button type="submit">Calculate Statistics</button>
+	<fieldset class="result">
+		<legend>Results</legend>
+		<div data-output="result">Enter values and click Calculate</div>
+	</fieldset>
+</form>
+
+<script>
+setupCalculator('expected-value', ({ getInput }) => {
+	const attackers = getInput('attackers');
+	const defenders = getInput('defenders');
+	const distribution = computeDistribution(attackers, defenders);
+
+	let expectedValue = 0;
+	let variance = 0;
+
+	for (let attackersLost = 0; attackersLost <= attackers; attackersLost++) {
+		const prob = distribution[attackersLost].toFloat();
+		expectedValue += attackersLost * prob;
+	}
+
+	for (let attackersLost = 0; attackersLost <= attackers; attackersLost++) {
+		const prob = distribution[attackersLost].toFloat();
+		variance += Math.pow(attackersLost - expectedValue, 2) * prob;
+	}
+
+	const stdDev = Math.sqrt(variance);
+
+	return `\
+		<strong>Expected Attackers Lost:</strong> ${expectedValue.toFixed(2)}<br>
+		<strong>Standard Deviation:</strong> ${stdDev.toFixed(2)}<br>
+		<strong>Most Likely Range:</strong> ${Math.max(0, Math.floor(expectedValue - stdDev))} - ${Math.min(attackers, Math.ceil(expectedValue + stdDev))} attackers lost`;
+});
+
+// Calculate (75, 10) on page load
+window.addEventListener('DOMContentLoaded', () => {
+	document.querySelector('[data-calculator="expected-value"]')?.dispatchEvent(new Event('submit', { cancelable: true }));
+});
+</script>
+
+#### The General Case
+
+There are however some unique properties of 3v2 space we can use to come up with a more satisfying answer that isn't dependent on our starting position.
+
+First off --- perhaps obvious but deserves being stated --- the majority of our dice rolls will occur in this space. In a real risk game, an attacker is likely to stop attacking if they drop below 3 attackers. And if the defender drops below 2 defenders they are most likely one roll away from defeat.
+
+Secondly, the edge traversal probability is uniform throughout this space. $P(N_{(75, 10)} \longrightarrow N_{(30, 5)})$ is the same as $P(N_{(100, 50)} \longrightarrow N_{(55, 45)})$ so we can generalize to terms of the change: $P(\Delta A, \Delta D)$.
