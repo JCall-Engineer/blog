@@ -2209,9 +2209,9 @@ window.addEventListener('DOMContentLoaded', () => {
 		if (calc) {
 			calc.dispatchEvent(new Event('submit', { cancelable: true }));
 		}
-		
+
 		index++;
-		setTimeout(processNext, 50); // Small delay between calculators
+		requestAnimationFrame(() => setTimeout(processNext, 50)); // Small delay between calculators
 	}
 
 	// Start after page renders
