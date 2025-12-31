@@ -2195,16 +2195,26 @@ Secondly, the edge traversal probability is uniform throughout this space. $P(N_
 <script>
 // Calculate (75, 10) on page load for relevant calculators
 window.addEventListener('DOMContentLoaded', () => {
-	requestAnimationFrame(() => {
-		document
-			.querySelector('[data-calculator="distribution"]')
-			?.dispatchEvent(new Event('submit', { cancelable: true }));
+	const calculators = [
+		'distribution',
+		'expected-value',
+	];
 
-		requestAnimationFrame(() => {
-			document
-				.querySelector('[data-calculator="expected-value"]')
-				?.dispatchEvent(new Event('submit', { cancelable: true }));
-		});
-	});
+	let index = 0;
+
+	function processNext() {
+		if (index >= calculators.length) return;
+		
+		const calc = document.querySelector(`[data-calculator="${calculators[index]}"]`);
+		if (calc) {
+			calc.dispatchEvent(new Event('submit', { cancelable: true }));
+		}
+		
+		index++;
+		setTimeout(processNext, 50); // Small delay between calculators
+	}
+
+	// Start after page renders
+	requestAnimationFrame(() => setTimeout(processNext, 100));
 });
 </script>
