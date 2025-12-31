@@ -884,7 +884,7 @@ Lady Luck didn't just abandon me that day --- she actively hired a hitman!
 
 But wait, you say, there could be something wrong with your simulation. Something wrong with the RNG on a GPU that affects its randomness. Can we confirm this conclusively with math? Well yes, as a matter of fact, we can!
 
-After running well over a trillion simulations on my GPU, I had strong empirical evidence that my Risk disaster was monumentally unlikely - somewhere around $10^{-8}$ to $10^{-9}$ for a single battle. But remember, this happened TWICE, making it more like $10^{-17}$. Even with trillions of trials, events this rare are hard to pin down precisely. Plus, as an engineer with a penchant for mathematical rigor, I wanted more than empirical evidence - I wanted to prove it exactly.
+After running well over a trillion simulations on my GPU, I had strong empirical evidence that my Risk disaster was monumentally unlikely - somewhere around $10^{-11}$ to $10^{-12}$ for a single battle. But remember, this happened TWICE, making it more like $10^{-23}$. Even with trillions of trials, events this rare are hard to pin down precisely. Plus, as an engineer with a penchant for mathematical rigor, I wanted more than empirical evidence - I wanted to prove it exactly.
 
 The key insight was that Risk combat, despite feeling random, follows a completely deterministic probability tree. Every battle state (attackers, defenders) has exact, calculable probabilities of transitioning to other states. This meant I could build a mathematical model to compute the exact probability - no sampling required.
 
