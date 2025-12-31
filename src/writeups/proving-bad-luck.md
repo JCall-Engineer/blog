@@ -2063,7 +2063,13 @@ This generates the theoretical probability for each possible outcome when starti
 </form>
 
 <script>
+computeDistributionCache = new Map();
 function computeDistribution(attackers, defenders) {
+	const key = `${attackers},${defenders}`;
+	if (computeDistributionCache.has(key)) {
+		return computeDistributionCache.get(key);
+	}
+
 	const start = new Node(attackers, defenders);
 	const distribution = Array(attackers + 1).fill(new Fraction(0n));
 
@@ -2078,6 +2084,7 @@ function computeDistribution(attackers, defenders) {
 		);
 	}
 
+	computeDistributionCache.set(key, distribution);
 	return distribution;
 }
 
