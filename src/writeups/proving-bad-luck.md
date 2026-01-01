@@ -1862,10 +1862,10 @@ First off --- perhaps obvious but deserves being stated --- the majority of our 
 Secondly, the edge traversal probability is uniform throughout this space. $P(N_{(75, 10)} \longrightarrow N_{(30, 5)})$ is the same as $P(N_{(100, 50)} \longrightarrow N_{(55, 45)})$ so we can generalize to terms of the change:
 
 $$
-P(\Delta A, \Delta D) = \sum_{T=T_{\min}}^{T_{\max}} \frac{(W + L + T)!}{W! \cdot L! \cdot T!} \cdot P_W^W \cdot P_L^L \cdot P_T^T
+P(\Delta A, \Delta D) = \sum_{T=T_{\min}}^{T_{\max}} \frac{(W + L + T)!}{W! \cdot L! \cdot T!} \cdot (P_W)^W \cdot (P_L)^L \cdot (P_T)^T
 $$
 
-The multinomial coefficient $\frac{(W + L + T)!}{W! \cdot L! \cdot T!}$ counts the number of distinct orderings of $W$, $L$, and $T$ outcomes, and each such ordering has probability $P_W^W \cdot P_L^L \cdot P_T^T$. This mirrors our implementation of `constant_space_probability` from [Deriving the Common Case](#deriving-the-common-case) where:
+The multinomial coefficient $\frac{(W + L + T)!}{W! \cdot L! \cdot T!}$ counts the number of distinct orderings of $W$, $L$, and $T$ outcomes, and each such ordering has probability $(P_W)^W \cdot (P_L)^L \cdot (P_T)^T$. This mirrors our implementation of `constant_space_probability` from [Deriving the Common Case](#deriving-the-common-case) where:
 
 - $T_{\min} = \Delta A \bmod 2$ (minimum ties needed for parity)
 - $T_{\max} = 2 \cdot \min\left(\left\lfloor\frac{\Delta A}{2}\right\rfloor, \left\lfloor\frac{\Delta D}{2}\right\rfloor\right) + T_{\min}$ (maximum possible trades)
@@ -1873,7 +1873,7 @@ The multinomial coefficient $\frac{(W + L + T)!}{W! \cdot L! \cdot T!}$ counts t
 The key insight is that $W$ and $L$ are both functions of $T$:
 
 $$
-\begin{align}
+\begin{aligned}
 W(T) &= \frac{\Delta D}{2} - \frac{T - T_{\min}}{2} \\
 L(T) &= \frac{\Delta A}{2} - \frac{T - T_{\min}}{2}
 \end{align}
@@ -1884,7 +1884,7 @@ These represent the number of $W$ and $L$ edges traversed, adjusted for trades b
 Let's examine what $W + L + T$ actually equals. Starting with our definitions:
 
 $$
-\begin{align}
+\begin{aligned}
 W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T
 \end{align}
@@ -1898,7 +1898,7 @@ Now here's where our earlier parity constraints become crucial. Recall from [Der
 In either case, $T - T_{\min}$ is always even, which means $\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor = \frac{T - T_{\min}}{2}$ exactly (no remainder). We can drop the floor operators:
 
 $$
-\begin{align}
+\begin{aligned}
 W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2 \cdot \frac{T - T_{\min}}{2} + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - (T - T_{\min}) + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}
