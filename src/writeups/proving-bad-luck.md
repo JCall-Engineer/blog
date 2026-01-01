@@ -1859,7 +1859,51 @@ There are however some unique properties of 3v2 space we can use to come up with
 
 First off --- perhaps obvious but deserves being stated --- the majority of our dice rolls will occur in this space. In a real risk game, an attacker is likely to stop attacking if they drop below 3 attackers. And if the defender drops below 2 defenders they are most likely one roll away from defeat.
 
-Secondly, the edge traversal probability is uniform throughout this space. $P(N_{(75, 10)} \longrightarrow N_{(30, 5)})$ is the same as $P(N_{(100, 50)} \longrightarrow N_{(55, 45)})$ so we can generalize to terms of the change: $P(\Delta A, \Delta D)$.
+Secondly, the edge traversal probability is uniform throughout this space. $P(N_{(75, 10)} \longrightarrow N_{(30, 5)})$ is the same as $P(N_{(100, 50)} \longrightarrow N_{(55, 45)})$ so we can generalize to terms of the change:
+
+$$
+P(\Delta A, \Delta D) = \sum_{T=T_{\min}}^{T_{\max}} \frac{(W + L + T)!}{W! \cdot L! \cdot T!} \cdot P_W^W \cdot P_L^L \cdot P_T^T
+$$
+
+The multinomial coefficient $\frac{(W + L + T)!}{W! \cdot L! \cdot T!}$ counts the number of distinct orderings of $W$, $L$, and $T$ outcomes, and each such ordering has probability $P_W^W \cdot P_L^L \cdot P_T^T$. This mirrors our implementation of `constant_space_probability` from [Deriving the Common Case](#deriving-the-common-case) where:
+
+- $T_{\min} = \Delta A \bmod 2$ (minimum ties needed for parity)
+- $T_{\max} = 2 \cdot \min\left(\left\lfloor\frac{\Delta A}{2}\right\rfloor, \left\lfloor\frac{\Delta D}{2}\right\rfloor\right) + T_{\min}$ (maximum possible trades)
+
+The key insight is that $W$ and $L$ are both functions of $T$:
+
+$$
+\begin{align}
+W(T) &= \frac{\Delta D}{2} - \frac{T - T_{\min}}{2} \\
+L(T) &= \frac{\Delta A}{2} - \frac{T - T_{\min}}{2}
+\end{align}
+$$
+
+These represent the number of $W$ and $L$ edges traversed, adjusted for trades between $W/L$ pairs and $TT$ pairs. Since both $W$ and $L$ are determined entirely by $T$, we can view this as a single-variable summation. Additionally $T$ itself is bounded by $\Delta A$ and $\Delta D$, meaning if we fix $\Delta D$, we effectively have a function of probability that depends only on $\Delta A$. Hold onto your seatbelt because that stuff I said we were "going to (mostly) ignore" from [Deriving the Common Case](#deriving-the-common-case)? That's all about to become relevant again.
+
+Let's examine what $W + L + T$ actually equals. Starting with our definitions:
+
+$$
+\begin{align}
+W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T \\
+&= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T
+\end{align}
+$$
+
+Now here's where our earlier parity constraints become crucial. Recall from [Deriving the Common Case](#deriving-the-common-case) that ***for any valid path***, $\Delta A$ and $\Delta D$ must have the same parity. This means:
+
+- If both are even: $T_{\min} = 0$, so $T$ is also even
+- If both are odd: $T_{\min} = 1$, so $T$ is also odd
+
+In either case, $T - T_{\min}$ is always even, which means $\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor = \frac{T - T_{\min}}{2}$ exactly (no remainder). We can drop the floor operators:
+
+$$
+\begin{align}
+W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2 \cdot \frac{T - T_{\min}}{2} + T \\
+&= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - (T - T_{\min}) + T \\
+&= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}
+\end{align}
+$$
 
 <script>
 // Calculate (75, 10) on page load for relevant calculators
