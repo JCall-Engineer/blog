@@ -15,7 +15,7 @@ deploy:
     - 'ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts'
     - 'chmod 644 ~/.ssh/known_hosts'
   script:
-    - ssh $SSH_USER@$SSH_HOST "source /home/gitlab-ci/env.sh && cd /jcall.engineer/deploy && ./ship.sh blog --fetch -v $CI_COMMIT_REF_NAME --build --yes && sudo chown -R jcall:www-data /jcall.engineer/deploy/out/"
+    - ssh $SSH_USER@$SSH_HOST "source /home/gitlab-ci/env.sh && cd /jcall.engineer/deploy && ./ship.sh blog --fetch -v $CI_COMMIT_REF_NAME --build --yes"
     - ssh $SSH_USER@$SSH_HOST "source /home/gitlab-ci/env.sh && cd /jcall.engineer/blog && git push github $CI_COMMIT_REF_NAME"
   only:
     - branches
