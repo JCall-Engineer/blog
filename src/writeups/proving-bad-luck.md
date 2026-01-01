@@ -1029,124 +1029,6 @@ class Node:
 		return f"({self.attackers}, {self.defenders})"
 ```
 
-<script>
-const FactorialCache = (() => {
-	const cache = [1n];
-	return {
-		get: (n) => {
-			while (cache.length <= n) {
-				cache.push(cache[cache.length - 1] * BigInt(cache.length));
-			}
-			return cache[n];
-		}
-	};
-})();
-
-function bigIntToFloat(x) {
-	if (x === 0n) return 0;
-
-	let neg = x < 0n;
-	if (neg) x = -x;
-
-	// bit length
-	let bits = x.toString(2).length;
-
-	// extract the top 53 bits (mantissa width)
-	let shift = bits - 53;
-	let mantissa = Number(x >> BigInt(shift));
-
-	// assemble float
-	let result = mantissa * 2 ** shift;
-
-	return neg ? -result : result;
-}
-
-class Fraction {
-	constructor(numerator, denominator = 1n) {
-		this.n = BigInt(numerator);
-		this.d = BigInt(denominator);
-		this._reduce();
-	}
-
-	_gcd(a, b) {
-		a = a < 0n ? -a : a;
-		b = b < 0n ? -b : b;
-		while (b !== 0n) {
-			[a, b] = [b, a % b];
-		}
-		return a;
-	}
-
-	_reduce() {
-		if (this.d === 0n) throw new Error("Division by zero");
-		if (this.d < 0n) {
-			this.n = -this.n;
-			this.d = -this.d;
-		}
-		const g = this._gcd(this.n, this.d);
-		this.n /= g;
-		this.d /= g;
-	}
-
-	add(other) {
-		return new Fraction(
-			this.n * other.d + other.n * this.d,
-			this.d * other.d
-		);
-	}
-
-	mul(other) {
-		return new Fraction(this.n * other.n, this.d * other.d);
-	}
-
-	pow(exp) {
-		if (exp === 0) return new Fraction(1n);
-		let result = new Fraction(this.n, this.d);
-		for (let i = 1; i < exp; i++) {
-			result = result.mul(this);
-		}
-		return result;
-	}
-
-	toFloat() {
-		return bigIntToFloat(this.n) / bigIntToFloat(this.d);
-	}
-
-	toString() {
-		return this.d === 1n ? `${this.n}` : `${this.n}/${this.d}`;
-	}
-}
-
-class Node {
-	constructor(attackers, defenders) {
-		this.attackers = attackers;
-		this.defenders = defenders;
-	}
-
-	key() {
-		return `${this.attackers},${this.defenders}`;
-	}
-
-	isValid() {
-		return this.attackers >= 0 && this.defenders >= 0 &&
-			(this.attackers + this.defenders) > 0;
-	}
-
-	hasEdges() {
-		return this.attackers > 0 && this.defenders > 0;
-	}
-
-	subtract(other) {
-		return new Node(
-			this.attackers - other.attackers,
-			this.defenders - other.defenders
-		);
-	}
-}
-
-const SpaceCache = new Map();
-</script>
-
 These two data structures are central to every algorithm from here on out. A node is a fancy tuple with helpers on it that shape how it accessed and traversed. `outcomes` yields for every edge from the node which is used a lot in the tail end solution (when we do use dynamic programming). There are safety checks in place to make sure that every instance of Node we create makes sense and is something we can do real math with. Here is the revised version of `probability_space` that uses these structures:
 
 ```python
@@ -1243,68 +1125,6 @@ for a in range(3):
 	for d in range(2):
 		probability_space(a + 1, d + 1)
 ```
-
-<script>
-function probability_space(attackers, defenders) {
-	attackers = Math.min(3, attackers);
-	defenders = Math.min(2, defenders);
-	const key = `${attackers},${defenders}`;
-
-	if (SpaceCache.has(key)) return SpaceCache.get(key);
-
-	let W = 0, L = 0, T = 0;
-	const dice = attackers + defenders;
-
-	function* rollGenerator(n) {
-		if (n === 0) {
-			yield [];
-			return;
-		}
-		for (let die = 1; die <= 6; die++) {
-			for (const rest of rollGenerator(n - 1)) {
-				yield [die, ...rest];
-			}
-		}
-	}
-
-	for (const roll of rollGenerator(dice)) {
-		const attRolls = roll.slice(0, attackers).sort((a, b) => b - a);
-		const defRolls = roll.slice(attackers).sort((a, b) => b - a);
-
-		let attLosses = 0, defLosses = 0;
-		const compare = Math.min(attackers, defenders);
-
-		for (let i = 0; i < compare; i++) {
-			if (attRolls[i] > defRolls[i]) defLosses++;
-			else attLosses++;
-		}
-
-		if (defLosses > attLosses) W++;
-		else if (attLosses > defLosses) L++;
-		else T++;
-	}
-
-	const N = 6 ** dice;
-	const space = {
-		attackers,
-		defenders,
-		W, T, L, N,
-		P_W: new Fraction(W, N),
-		P_T: new Fraction(T, N),
-		P_L: new Fraction(L, N)
-	};
-
-	SpaceCache.set(key, space);
-	return space;
-}
-
-// Precompute spaces
-for (let a = 1; a <= 3; a++) {
-	for (let d = 1; d <= 2; d++) {
-		probability_space(a, d);
-	}
-}
-</script>
 
 Key takeaways:
 
@@ -1455,47 +1275,6 @@ def constant_space_probability(start: Node, end: Node) -> Fraction:
 	return total_probability
 ```
 
-<script>
-function constant_space_probability(start, end) {
-	const space = probability_space(3, 2);
-	const delta = start.subtract(end);
-
-	if (delta.attackers < 0 || delta.defenders < 0) return new Fraction(0n);
-	if (start.attackers >= 2 && start.defenders >= 2) {
-		if ((delta.attackers + delta.defenders) % 2 !== 0) {
-			return new Fraction(0n);
-		}
-	}
-
-	const W_max = Math.floor(delta.defenders / 2);
-	const L_max = Math.floor(delta.attackers / 2);
-	const T_min = delta.attackers % 2;
-	const T_max = 2 * Math.min(L_max, W_max) + T_min;
-
-	let totalProb = new Fraction(0n);
-
-	for (let T_edges = T_min; T_edges <= T_max; T_edges += 2) {
-		const W_edges = W_max - Math.floor((T_edges - T_min) / 2);
-		const L_edges = L_max - Math.floor((T_edges - T_min) / 2);
-		const totalEdges = W_edges + L_edges + T_edges;
-
-		const multinomial = FactorialCache.get(totalEdges) /
-			(FactorialCache.get(W_edges) * FactorialCache.get(L_edges) *
-			FactorialCache.get(T_edges));
-
-		const pathProb = space.P_W.pow(W_edges)
-			.mul(space.P_L.pow(L_edges))
-			.mul(space.P_T.pow(T_edges));
-
-		totalProb = totalProb.add(
-			new Fraction(multinomial).mul(pathProb)
-		);
-	}
-
-	return totalProb;
-}
-</script>
-
 This function works because within 3v2 space, we can count path arrangements combinatorially rather than traversing them --- reducing the problem from exponential in path length to linear in node distance.
 
 ### Traversing for an Exact Solution
@@ -1532,7 +1311,7 @@ svg#risk-prob-space {
 	}
 }
 </style>
-<img src="https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/visualization.svg" alt="Risk Dice Rolling Scenarios" id="risk-prob-space" class="inline-svg" />
+<img src="@assets/visualization.svg" alt="Risk Dice Rolling Scenarios" id="risk-prob-space" class="inline-svg" />
 
 The basic idea: we are going to use `constant_space_probability` to compute the probability of reaching every node that *could* leave 3v2 space, and then use dynamic programming while *skipping over* nodes that we have computed exactly using `constant_space_probability`, which avoids double count probabilities.
 
@@ -1593,108 +1372,6 @@ def compute_probability(start: Node, end: Node) -> Fraction:
 
 	return reach_probability[end]
 ```
-
-<script>
-function computeProbability(start, end) {
-	if (!start.isValid() || !start.hasEdges() || !end.isValid()) {
-		return new Fraction(0n);
-	}
-	if (start.attackers < end.attackers || start.defenders < end.defenders) {
-		return new Fraction(0n);
-	}
-	if (start.attackers === end.attackers && start.defenders === end.defenders) {
-		return new Fraction(1n);
-	}
-
-	// Try fast path for 3v2 space
-	if (end.hasEdges() && start.attackers >= 3 && start.defenders >= 2 &&
-		end.attackers >= 3 && end.defenders >= 2) {
-		return constant_space_probability(start, end);
-	}
-
-	// Dynamic programming fallback
-	const reachProb = new Map();
-
-	// Compute boundaries
-	const boundaries = [];
-	if (start.attackers >= 3 && start.defenders >= 2) {
-		boundaries.push(new Node(3, 2));
-		for (let d = 3; d <= start.defenders; d++) {
-			boundaries.push(new Node(3, d));
-		}
-		for (let a = 4; a <= start.attackers; a++) {
-			boundaries.push(new Node(a, 2));
-		}
-		if (start.attackers >= 4 && start.defenders >= 3) {
-			boundaries.push(new Node(4, 3));
-			for (let d = 4; d <= start.defenders; d++) {
-				boundaries.push(new Node(4, d));
-			}
-			for (let a = 5; a <= start.attackers; a++) {
-				boundaries.push(new Node(a, 3));
-			}
-		}
-	}
-
-	for (const boundary of boundaries) {
-		if (boundary.attackers <= start.attackers &&
-			boundary.defenders <= start.defenders) {
-			reachProb.set(boundary.key(), constant_space_probability(start, boundary));
-		}
-	}
-
-	if (boundaries.length === 0) {
-		reachProb.set(start.key(), new Fraction(1n));
-	}
-
-	// Traverse in topological order
-	for (let total = start.attackers + start.defenders;
-		total >= end.attackers + end.defenders; total--) {
-		for (let a = end.attackers; a <= start.attackers; a++) {
-			const d = total - a;
-			if (d < end.defenders || d > start.defenders) continue;
-
-			const node = new Node(a, d);
-			const prob = reachProb.get(node.key());
-			if (!prob || prob.n === 0n) continue;
-			if (!node.hasEdges()) continue;
-
-			const space = probability_space(
-				Math.min(3, node.attackers),
-				Math.min(2, node.defenders)
-			);
-
-			const outcomes = [];
-			const compare = Math.min(2, node.attackers, node.defenders);
-
-			if (compare === 2) {
-				outcomes.push([new Node(node.attackers, node.defenders - 2), space.P_W]);
-				if (space.T > 0) {
-					outcomes.push([new Node(node.attackers - 1, node.defenders - 1), space.P_T]);
-				}
-				outcomes.push([new Node(node.attackers - 2, node.defenders), space.P_L]);
-			} else if (compare === 1) {
-				outcomes.push([new Node(node.attackers, node.defenders - 1), space.P_W]);
-				outcomes.push([new Node(node.attackers - 1, node.defenders), space.P_L]);
-			}
-
-			for (const [outcome, edgeProb] of outcomes) {
-				if (!outcome.isValid()) continue;
-				const isBoundary = boundaries.some(b =>
-					b.attackers === outcome.attackers && b.defenders === outcome.defenders
-				);
-				if (!isBoundary) {
-					const key = outcome.key();
-					const current = reachProb.get(key) || new Fraction(0n);
-					reachProb.set(key, current.add(prob.mul(edgeProb)));
-				}
-			}
-		}
-	}
-
-	return reachProb.get(end.key()) || new Fraction(0n);
-}
-</script>
 
 <style>
 .risk-calculator {
@@ -1778,6 +1455,24 @@ Here you can play with the calculator yourself.
 </form>
 
 <script>
+const riskWorker = new Worker('@assets/risk-worker.js');
+let workerId = 0;
+function callWorker(func, ...args) {
+	return new Promise((resolve, reject) => {
+		const id = ++workerId;
+
+		const handler = (e) => {
+			if (e.data.id === id) {
+				riskWorker.removeEventListener('message', handler);
+				e.data.error ? reject(new Error(e.data.error)) : resolve(e.data.result);
+			}
+		};
+
+		riskWorker.addEventListener('message', handler);
+		riskWorker.postMessage({ func, args, id });
+	});
+}
+
 function setupCalculator(calculatorId, computeFn, loadingHTML = 'Calculating...') {
 	const container = document.querySelector(`[data-calculator="${calculatorId}"]`);
 	if (!container) return;
@@ -1790,33 +1485,32 @@ function setupCalculator(calculatorId, computeFn, loadingHTML = 'Calculating...'
 		if (element) element.innerHTML = html;
 	};
 
-	container.addEventListener('submit', (e) => {
+	container.addEventListener('submit', async (e) => {
 		e.preventDefault();
 		setOutput('result', loadingHTML);
-		setTimeout(() => {
-			try {
-				const result = computeFn({ getInput, setInput, setOutput });
-				if (typeof result === 'string') {
-					setOutput('result', result);
-				}
-			} catch (e) {
-				setOutput('result', `Error: ${e.message}`);
+		try {
+			const result = await computeFn({ getInput, setInput, setOutput });
+			if (typeof result === 'string') {
+				setOutput('result', result);
 			}
-		}, 10);
+		} catch (e) {
+			setOutput('result', `Error: ${e.message}`);
+		}
 	});
 }
 
-setupCalculator('traverse-probability', ({ getInput }) => {
-	const start = new Node(getInput('startA'), getInput('startD'));
-	const end = new Node(getInput('endA'), getInput('endD'));
-	const prob = computeProbability(start, end);
+setupCalculator('traverse-probability', async ({ getInput }) => {
+	const prob = await callWorker('computeProbability',
+		getInput('startA'), getInput('startD'),
+		getInput('endA'), getInput('endD')
+	);
 
-	const float = prob.toFloat();
+	const float = prob.float;
 	const sci = float.toExponential(4);
 	const odds = (1/float).toExponential(2);
 
 	return `\
-		<strong>Exact:</strong> ${prob.toString()}<br>
+		<strong>Exact:</strong> ${prob.string}<br>
 		<strong>Probability:</strong> ${sci}<br>
 		<strong>Odds:</strong> ~1 in ${odds}`;
 });
@@ -2063,41 +1757,16 @@ This generates the theoretical probability for each possible outcome when starti
 </form>
 
 <script>
-computeDistributionCache = new Map();
-function computeDistribution(attackers, defenders) {
-	const key = `${attackers},${defenders}`;
-	if (computeDistributionCache.has(key)) {
-		return computeDistributionCache.get(key);
-	}
-
-	const start = new Node(attackers, defenders);
-	const distribution = Array(attackers + 1).fill(new Fraction(0n));
-
-	for (let attackersLeft = 1; attackersLeft <= attackers; attackersLeft++) {
-		const attackersLost = attackers - attackersLeft;
-		distribution[attackersLost] = computeProbability(start, new Node(attackersLeft, 0));
-	}
-
-	for (let defendersLeft = 1; defendersLeft <= defenders; defendersLeft++) {
-		distribution[attackers] = distribution[attackers].add(
-			computeProbability(start, new Node(0, defendersLeft))
-		);
-	}
-
-	computeDistributionCache.set(key, distribution);
-	return distribution;
-}
-
-setupCalculator('distribution', ({ getInput }) => {
+setupCalculator('distribution', async ({ getInput }) => {
 	const attackers = getInput('attackers');
 	const defenders = getInput('defenders');
 
 	try {
-		const distribution = computeDistribution(attackers, defenders);
+		const distribution = await callWorker('computeDistribution', attackers, defenders);
 		return distribution.map((prob, i) => `\
 			<tr>
 				<td>${i}</td>
-				<td>${prob.toFloat().toExponential(4)}</td>
+				<td>${prob.float.toExponential(4)}</td>
 			</tr>`
 		).join('');
 	} catch (e) {
@@ -2110,17 +1779,17 @@ Now we can compare this against our simulations:
 
 #### The Results: Visualized
 
-![Normalized Distribution Graph](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/normalized_bins.png)
+![Normalized Distribution Graph](@assets/normalized_bins.png)
 
 The theoretical curve peaks around 6-8 attackers lost with a characteristic asymmetric shape --- notice how the slope alternates between steep and shallow steps, a direct consequence of Risk's mechanics where ties (both sides lose 1 troop) occur ~34% of the time in 3v2 combat, while decisive outcomes (one side loses 2 troops) dominate the other ~66%.
 
 The CPU simulation with 100 million trials tracks the theoretical curve remarkably well through the main distribution but lacks the sample size to capture outcomes beyond ~50 attackers lost. The CUDA simulation with 1 trillion trials extends deep into the tail, though it exhibits slight oscillations in the 4-10 range --- likely a counting artifact in the histogram aggregation, as evidenced by the total summing to 1,000,000,192,512 rather than exactly 1 trillion. Despite this minor systematic error, both simulations validate the theoretical distribution: the probability drops below 1% after ~20 attackers lost and becomes vanishingly small beyond 25.
 
-![Cumulative Distribution Graph](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/cumulative.png)
+![Cumulative Distribution Graph](@assets/cumulative.png)
 
 The cumulative distribution shows how quickly probability mass concentrates in the likely outcomes. All three approaches converge to essentially the same curve --- by 25 attackers lost, we've accounted for over 99.9% of all possible outcomes. The CUDA simulation shows a slight deviation from the theoretical curve (visible as a small gap between the lines), consistent with the counting artifacts we saw in the normalized distribution. However, the deviation remains small throughout: the simulations successfully capture both the central tendency and the overall probability structure, confirming our random number generation reflects the true underlying distribution.
 
-![Log Scale Graph](https://cdn.jsdelivr.net/gh/JCall-Engineer/Risk-Simulations@main/out/log.png)
+![Log Scale Graph](@assets/log.png)
 
 The log scale reveals the true test of our models: matching probabilities across 12 orders of magnitude, from common outcomes in the single digit percentages ($\approx10^{-2}$) down to events so rare they'd occur roughly once in 10 trillion games. The theoretical curve extends smoothly into this extreme tail, predicting probabilities as small as $10^{-13}$ with exact precision.
 
@@ -2157,21 +1826,21 @@ $$
 </form>
 
 <script>
-setupCalculator('expected-value', ({ getInput }) => {
+setupCalculator('expected-value', async ({ getInput }) => {
 	const attackers = getInput('attackers');
 	const defenders = getInput('defenders');
-	const distribution = computeDistribution(attackers, defenders);
+	const distribution = await callWorker('computeDistribution', attackers, defenders);
 
 	let expectedValue = 0;
 	let variance = 0;
 
 	for (let attackersLost = 0; attackersLost <= attackers; attackersLost++) {
-		const prob = distribution[attackersLost].toFloat();
+		const prob = distribution[attackersLost].float;
 		expectedValue += attackersLost * prob;
 	}
 
 	for (let attackersLost = 0; attackersLost <= attackers; attackersLost++) {
-		const prob = distribution[attackersLost].toFloat();
+		const prob = distribution[attackersLost].float;
 		variance += Math.pow(attackersLost - expectedValue, 2) * prob;
 	}
 
