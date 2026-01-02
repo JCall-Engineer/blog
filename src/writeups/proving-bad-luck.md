@@ -1902,7 +1902,7 @@ $$
 W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2 \cdot \frac{T - T_{\min}}{2} + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - (T - T_{\min}) + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}
-\end{align}
+\end{aligned}
 $$
 
 <script>
