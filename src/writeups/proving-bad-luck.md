@@ -1876,7 +1876,7 @@ $$
 \begin{aligned}
 W(T) &= \frac{\Delta D}{2} - \frac{T - T_{\min}}{2} \\
 L(T) &= \frac{\Delta A}{2} - \frac{T - T_{\min}}{2}
-\end{align}
+\end{aligned}
 $$
 
 These represent the number of $W$ and $L$ edges traversed, adjusted for trades between $W/L$ pairs and $TT$ pairs. Since both $W$ and $L$ are determined entirely by $T$, we can view this as a single-variable summation. Additionally $T$ itself is bounded by $\Delta A$ and $\Delta D$, meaning if we fix $\Delta D$, we effectively have a function of probability that depends only on $\Delta A$. Hold onto your seatbelt because that stuff I said we were "going to (mostly) ignore" from [Deriving the Common Case](#deriving-the-common-case)? That's all about to become relevant again.
@@ -1887,7 +1887,7 @@ $$
 \begin{aligned}
 W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T
-\end{align}
+\end{aligned}
 $$
 
 Now here's where our earlier parity constraints become crucial. Recall from [Deriving the Common Case](#deriving-the-common-case) that ***for any valid path***, $\Delta A$ and $\Delta D$ must have the same parity. This means:
