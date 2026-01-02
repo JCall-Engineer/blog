@@ -1862,7 +1862,7 @@ First off --- perhaps obvious but deserves being stated --- the majority of our 
 Secondly, the edge traversal probability is uniform throughout this space. $P(N_{(75, 10)} \longrightarrow N_{(30, 5)})$ is the same as $P(N_{(100, 50)} \longrightarrow N_{(55, 45)})$ so we can generalize to terms of the change:
 
 $$
-P(\Delta A, \Delta D) = \sum_{T=T_{\min}}^{T_{\max}} \frac{(W + L + T)!}{W! \cdot L! \cdot T!} \cdot (P_W)^W \cdot (P_L)^L \cdot (P_T)^T
+P(\Delta A, \Delta D) = \sum_{\substack{T=T_{\min} \\ T \equiv T_{\min} \pmod{2}}}^{T_{\max}} \frac{(W + L + T)!}{W! \cdot L! \cdot T!} \cdot (P_W)^W \cdot (P_L)^L \cdot (P_T)^T
 $$
 
 The multinomial coefficient $\frac{(W + L + T)!}{W! \cdot L! \cdot T!}$ counts the number of distinct orderings of $W$, $L$, and $T$ outcomes, and each such ordering has probability $(P_W)^W \cdot (P_L)^L \cdot (P_T)^T$. This mirrors our implementation of `constant_space_probability` from [Deriving the Common Case](#deriving-the-common-case) where:
@@ -1903,6 +1903,45 @@ W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\De
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - (T - T_{\min}) + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}
 \end{aligned}
+$$
+
+Doing some simple substitutions we get
+
+$$
+\begin{aligned}
+P(\Delta A, \Delta D) &= \sum_{\substack{T=T_{\min} \\ T \equiv T_{\min} \pmod{2}}}^{T_{\max}} \frac{\left(\left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}\right)!}{\left(\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot \left(\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot T!} \cdot (P_W)^{\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_L)^{\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_T)^T \\
+&= \left(\left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}\right)! \sum_{\substack{T=T_{\min} \\ T \equiv T_{\min} \pmod{2}}}^{T_{\max}} \frac{1}{\left(\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot \left(\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot T!} \cdot (P_W)^{\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_L)^{\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_T)^T
+\end{aligned}
+$$
+
+Summing with a step of 2 is hostile to analysis, so we'll make a k-substitution to see if we can reason about this sum.
+
+$$
+k = \frac{T - T_{\min}}{2}
+\quad\Longleftrightarrow\quad
+T = 2k + T_{\min} \\
+k = 0,1,\dots,k_{\max}
+\quad\text{where}\quad
+k_{\max} = \min\!\left(\left\lfloor\frac{\Delta A}{2}\right\rfloor,\left\lfloor\frac{\Delta D}{2}\right\rfloor\right)
+$$
+
+And while we're at it, let's do some compacting substitutions
+
+$$
+a = \left\lfloor\frac{\Delta A}{2}\right\rfloor,
+\qquad
+d = \left\lfloor\frac{\Delta D}{2}\right\rfloor \\
+W = d - k,
+\quad
+L = a - k,
+\quad
+T = 2k + T_{\min}
+$$
+
+This gives us the cleanest looking version of our general equation I can come up with.
+
+$$
+P(\Delta A, \Delta D) = (a + d + T_{\min})! \sum_{k=0}^{k_{\max}} \frac{(P_W)^{d-k} \cdot (P_L)^{a-k} \cdot (P_T)^{2k + T_{\min}}}{(d-k)! \cdot (a-k)! \cdot (2k + T_{\min})!}
 $$
 
 <script>
