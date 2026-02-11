@@ -1946,13 +1946,15 @@ $$
 
 ##### Final Form
 
-Substituting these expressions yields the cleanest general form for the transition probability in 3v2 space:
+Substituting these expressions yields the cleanest general form (at least that I can come up with) for the transition probability in 3v2 space:
 
 $$
 P(\Delta A, \Delta D) = (a + d + T_{\min})! \sum_{k=0}^{k_{\max}} \frac{(P_W)^{d-k} \cdot (P_L)^{a-k} \cdot (P_T)^{2k + T_{\min}}}{(d-k)! \cdot (a-k)! \cdot (2k + T_{\min})!}
 $$
 
 This expression depends only on the net troop losses and remains valid precisely because every term in the sum corresponds to a feasible path in the underlying state graph.
+
+I’ll be honest: I don’t currently know how to push this expression all the way to the clean closed-form solution I had in mind. I can see the shape of what I’d like to do---extend the recurrence, analyze its limit as attackers grow large, and derive an exact expectation---but that’s a deeper mathematical problem than I have time to chase right now. What I can see is that the recurrence converges very quickly. Playing with the calculator above shows that for a fixed defender count of 10, the results stabilize fast: 20 attackers behaves almost identically to 70. Numerically, the expected attacker loss against 10 defenders settles around 8.3, which lines up nicely with both intuition and the simulation results.
 
 <script>
 // Calculate (75, 10) on page load for relevant calculators
