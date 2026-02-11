@@ -1855,94 +1855,104 @@ setupCalculator('expected-value', async ({ getInput }) => {
 
 #### The General Case
 
-There are however some unique properties of 3v2 space we can use to come up with a more satisfying answer that isn't dependent on our starting position.
+There are, however, some unique properties of 3v2 space we can use to come up with a more satisfying answer that isn't dependent on our starting position.
 
-First off --- perhaps obvious but deserves being stated --- the majority of our dice rolls will occur in this space. In a real risk game, an attacker is likely to stop attacking if they drop below 3 attackers. And if the defender drops below 2 defenders they are most likely one roll away from defeat.
+First off --- perhaps obvious but deserves being stated --- the majority of dice rolls in a real Risk game occur in this space. An attacker is likely to stop attacking once they drop below three units, and if the defender drops below two they are usually one roll away from defeat.
 
-Secondly, the edge traversal probability is uniform throughout this space. $P(N_{(75, 10)} \longrightarrow N_{(30, 5)})$ is the same as $P(N_{(100, 50)} \longrightarrow N_{(55, 45)})$ so we can generalize to terms of the change:
+Secondly, the edge traversal probability is uniform throughout this space. For example, $P(N_{(75, 10)} \longrightarrow N_{(30, 5)})$ is the same as $P(N_{(100, 50)} \longrightarrow N_{(55, 45)})$. As long as we remain in 3v2 space, we can describe the probability of transitions purely in terms of troop loss: $P(\Delta A, \Delta D)$.
+
+We'll start by mirroring our implementation of `constant_space_probability` from [Deriving the Common Case](#deriving-the-common-case) with a general formula that sums over possible counts of T-edges:
 
 $$
 P(\Delta A, \Delta D) = \sum_{\substack{T=T_{\min} \\ T \equiv T_{\min} \pmod{2}}}^{T_{\max}} \frac{(W + L + T)!}{W! \cdot L! \cdot T!} \cdot (P_W)^W \cdot (P_L)^L \cdot (P_T)^T
 $$
 
-The multinomial coefficient $\frac{(W + L + T)!}{W! \cdot L! \cdot T!}$ counts the number of distinct orderings of $W$, $L$, and $T$ outcomes, and each such ordering has probability $(P_W)^W \cdot (P_L)^L \cdot (P_T)^T$. This mirrors our implementation of `constant_space_probability` from [Deriving the Common Case](#deriving-the-common-case) where:
-
-- $T_{\min} = \Delta A \bmod 2$ (minimum ties needed for parity)
-- $T_{\max} = 2 \cdot \min\left(\left\lfloor\frac{\Delta A}{2}\right\rfloor, \left\lfloor\frac{\Delta D}{2}\right\rfloor\right) + T_{\min}$ (maximum possible trades)
-
-The key insight is that $W$ and $L$ are both functions of $T$:
+The multinomial coefficient $\frac{(W + L + T)!}{W! \cdot L! \cdot T!}$ counts the number of distinct orderings of $W$, $L$, and $T$ outcomes, and each such ordering has probability $(P_W)^W \cdot (P_L)^L \cdot (P_T)^T$. This mirrors  where:
 
 $$
 \begin{aligned}
-W(T) &= \frac{\Delta D}{2} - \frac{T - T_{\min}}{2} \\
-L(T) &= \frac{\Delta A}{2} - \frac{T - T_{\min}}{2}
+T_{\min} &= \Delta A \bmod 2 \\
+T_{\max} &= 2 \cdot \min\!\left(\left\lfloor\frac{\Delta A}{2}\right\rfloor, \left\lfloor\frac{\Delta D}{2}\right\rfloor\right) + T_{\min}
+\end{aligned}
+$$
+
+##### The Key Insight: Valid Paths Simplify Everything
+
+At first glance, $W$ and $L$ appear to be independent variables alongside $T$. However, both can be written actually functions of $T$:
+
+$$
+\begin{aligned}
+W(T) &= \left\lfloor\frac{\Delta D}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor \\
+L(T) &= \left\lfloor\frac{\Delta A}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor
 \end{aligned}
 $$
 
 These represent the number of $W$ and $L$ edges traversed, adjusted for trades between $W/L$ pairs and $TT$ pairs. Since both $W$ and $L$ are determined entirely by $T$, we can view this as a single-variable summation. Additionally $T$ itself is bounded by $\Delta A$ and $\Delta D$, meaning if we fix $\Delta D$, we effectively have a function of probability that depends only on $\Delta A$. Hold onto your seatbelt because that stuff I said we were "going to (mostly) ignore" from [Deriving the Common Case](#deriving-the-common-case)? That's all about to become relevant again.
 
-Let's examine what $W + L + T$ actually equals. Starting with our definitions:
-
-$$
-\begin{aligned}
-W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - \left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T \\
-&= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor + T
-\end{aligned}
-$$
-
-Now here's where our earlier parity constraints become crucial. Recall from [Deriving the Common Case](#deriving-the-common-case) that ***for any valid path***, $\Delta A$ and $\Delta D$ must have the same parity. This means:
+Recall from [Deriving the Common Case](#deriving-the-common-case) that ***for any valid path***, $\Delta A$ and $\Delta D$ must have the same parity. This means:
 
 - If both are even: $T_{\min} = 0$, so $T$ is also even
 - If both are odd: $T_{\min} = 1$, so $T$ is also odd
 
-In either case, $T - T_{\min}$ is always even, which means $\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor = \frac{T - T_{\min}}{2}$ exactly (no remainder). We can drop the floor operators:
+In either case, $T - T_{\min}$ is always even, which means $\left\lfloor\frac{T - T_{\min}}{2}\right\rfloor = \frac{T - T_{\min}}{2}$ exactly (no remainder). This guarantees the expressions for $W(T)$ and $L(T)$ remain integral, which is only possible because we're restricting ourselves to valid paths through the state graph.
+
+##### Discovering a Constant
+
+Let's examine what $W + L + T$ actually equals. Starting with our definitions:
 
 $$
 \begin{aligned}
-W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2 \cdot \frac{T - T_{\min}}{2} + T \\
+W + L + T &= \left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2} + \left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2} + T \\
+&= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - 2 \cdot \frac{T - T_{\min}}{2} + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor - (T - T_{\min}) + T \\
 &= \left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}
 \end{aligned}
 $$
 
-Doing some simple substitutions we get
+The total number of edges is constant across all valid paths! This allows us to factor out the multinomial coefficient's numerator:
 
 $$
 \begin{aligned}
 P(\Delta A, \Delta D) &= \sum_{\substack{T=T_{\min} \\ T \equiv T_{\min} \pmod{2}}}^{T_{\max}} \frac{\left(\left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}\right)!}{\left(\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot \left(\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot T!} \cdot (P_W)^{\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_L)^{\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_T)^T \\
-&= \left(\left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}\right)! \sum_{\substack{T=T_{\min} \\ T \equiv T_{\min} \pmod{2}}}^{T_{\max}} \frac{1}{\left(\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot \left(\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot T!} \cdot (P_W)^{\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_L)^{\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_T)^T
+&= \left(\left\lfloor\frac{\Delta D}{2}\right\rfloor + \left\lfloor\frac{\Delta A}{2}\right\rfloor + T_{\min}\right)! \sum_{\substack{T=T_{\min} \\ T \equiv T_{\min} \pmod{2}}}^{T_{\max}} \frac{(P_W)^{\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_L)^{\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}} \cdot (P_T)^T}{\left(\left\lfloor\frac{\Delta D}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot \left(\left\lfloor\frac{\Delta A}{2}\right\rfloor - \frac{T - T_{\min}}{2}\right)! \cdot T!}
 \end{aligned}
 $$
 
-Summing with a step of 2 is hostile to analysis, so we'll make a k-substitution to see if we can reason about this sum.
+##### Reducing the Sum
+
+Summing with a step of 2 is hostile to analysis, so we'll make a k-substitution:
 
 $$
-k = \frac{T - T_{\min}}{2}
-\quad\Longleftrightarrow\quad
-T = 2k + T_{\min} \\
-k = 0,1,\dots,k_{\max}
-\quad\text{where}\quad
-k_{\max} = \min\!\left(\left\lfloor\frac{\Delta A}{2}\right\rfloor,\left\lfloor\frac{\Delta D}{2}\right\rfloor\right)
+k = \frac{T - T_{\min}}{2} \quad\Longleftrightarrow\quad T = 2k + T_{\min}
 $$
 
-And while we're at it, let's do some compacting substitutions
+The bounds become:
 
 $$
-a = \left\lfloor\frac{\Delta A}{2}\right\rfloor,
-\qquad
-d = \left\lfloor\frac{\Delta D}{2}\right\rfloor \\
-W = d - k,
-\quad
-L = a - k,
-\quad
-T = 2k + T_{\min}
+k = 0,1,\dots,k_{\max} \quad\text{where}\quad k_{\max} = \min\!\left(\left\lfloor\frac{\Delta A}{2}\right\rfloor,\left\lfloor\frac{\Delta D}{2}\right\rfloor\right)
 $$
 
-This gives us the cleanest looking version of our general equation I can come up with.
+For compactness, define:
+
+$$
+a = \left\lfloor\frac{\Delta A}{2}\right\rfloor, \quad d = \left\lfloor\frac{\Delta D}{2}\right\rfloor
+$$
+
+so that:
+
+$$
+W = d - k, \quad L = a - k, \quad T = 2k + T_{\min}
+$$
+
+##### Final Form
+
+Substituting these expressions yields the cleanest general form for the transition probability in 3v2 space:
 
 $$
 P(\Delta A, \Delta D) = (a + d + T_{\min})! \sum_{k=0}^{k_{\max}} \frac{(P_W)^{d-k} \cdot (P_L)^{a-k} \cdot (P_T)^{2k + T_{\min}}}{(d-k)! \cdot (a-k)! \cdot (2k + T_{\min})!}
 $$
+
+This expression depends only on the net troop losses and remains valid precisely because every term in the sum corresponds to a feasible path in the underlying state graph.
 
 <script>
 // Calculate (75, 10) on page load for relevant calculators
