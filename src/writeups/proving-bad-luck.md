@@ -2,7 +2,7 @@
 title: "How I Proved I was Unlucky using Cuda and Verified it with Math"
 description: "A deep-dive analysis into the probabilities of Risk using CUDA and Math to validate the improbability a humorously outrageous game."
 tags: [ projects, software ]
-draft: true
+date_effective: 2026-02-11
 ---
 
 ## First, a Small Disclaimer
@@ -1955,6 +1955,14 @@ $$
 This expression depends only on the net troop losses and remains valid precisely because every term in the sum corresponds to a feasible path in the underlying state graph.
 
 I’ll be honest: I don’t currently know how to push this expression all the way to the clean closed-form solution I had in mind. I can see the shape of what I’d like to do---extend the recurrence, analyze its limit as attackers grow large, and derive an exact expectation---but that’s a deeper mathematical problem than I have time to chase right now. What I can see is that the recurrence converges very quickly. Playing with the calculator above shows that for a fixed defender count of 10, the results stabilize fast: 20 attackers behaves almost identically to 70. Numerically, the expected attacker loss against 10 defenders settles around 8.3, which lines up nicely with both intuition and the simulation results.
+
+## Conclusion
+
+What started as a grudge against a ridiculous game of Risk turned into a surprisingly deep technical exercise. I set out to answer a simple question---how unlikely was that disaster?---and ended up building a CUDA simulator capable of running a trillion battles in mere minutes (a feat I find disproportionate satisfaction in). The raw result was unambiguous: losing roughly 75 attackers against 10 defenders is an event so rare it appears only a handful of times in a trillion trials. Seeing it happen twice in a row remains, in purely probabilistic terms, absurd beyond everyday intuition.
+
+The math provided a second perspective. By modeling battles with exact dice probabilities, I was able to sanity-check the simulation and estimate meaningful quantities like expected losses. While I didn’t push that analysis all the way to a closed-form solution, it converges quickly enough to confirm the big picture: against 10 defenders, an attacker should expect to lose only about 8.3 troops on average. My experience was not just bad luck---it was vanishingly, spectacularly bad luck.
+
+More than anything, this project is a reminder that human intuition was never built for extreme probabilities. A calculator can produce arbitrarily tiny probabilities, but insight comes from understanding what those numbers actually represent. In this case, the answer is clear: sometimes the universe really does roll the worst possible dice---and occasionally it decides to do it to the same person twice.
 
 <script>
 // Calculate (75, 10) on page load for relevant calculators
