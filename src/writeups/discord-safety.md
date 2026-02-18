@@ -8,7 +8,7 @@ draft: true
 
 I didn’t set out to build a Discord bot. With all the health challenges I’ve faced, one pattern became clear: improvement was always preceded by data collection. I discovered I had Circadian Rhythm Disorder *because* I started tracking my sleep. Instead of trying to explain my experience to a doctor, I could show them a graph:
 
-![Graph of my sleep prior to CRD diagnosis](@assets/sleep.png)
+![Graph of my sleep prior to CRD diagnosis](@assets/sleep.jpg)
 
 That graph changed the course of my life! It turned something subjective and hard to describe into something concrete and undeniable. Given the other health challenges I face, I wanted a way to track important data with as little friction as possible. The solution I arrived at was a Discord bot that let me log events with a simple slash command:
 
