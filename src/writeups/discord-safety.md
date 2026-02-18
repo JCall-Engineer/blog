@@ -46,7 +46,180 @@ This worked, but it introduced a new problem: Rui was no longer as responsive as
 
 ### The Original OOP Event Override Model
 
+My original implementation was built on top of discord.py, which exposes Discord events like `on_ready` and `on_message` as coroutine hooks. Rather than binding all logic directly to those hooks, Rui treated the Discord client as shared context and passed it into a set of modules. Each module could override event handlers, and Rui would forward incoming events to every registered module. This effectively created a second event dispatch layer on top of discord.py’s native event system. The implementation looked something like this:
+
+```python
+class RuiContext:
+	def __init__(self, client: discord.Client, slash_tree: discord.app_commands.CommandTree):
+		self.client = client
+		self.slash_tree = slash_tree
+
+class RuiModule:
+	def __init__(self, context: RuiContext, **kwargs):
+		self.context = context
+		self.initialize(**kwargs)
+
+	# Hook for modules to bind commands or set-up external API state before discord.client is initialized
+	def initialize(self, **kwargs):
+		pass
+
+	# Hook for modules to bind to discord.client.event.on_ready
+	async def on_ready(self):
+		pass
+
+	# Hook for modules to bind to discord.client.event.on_message
+	async def on_message(self, message : discord.Message):
+		pass
+
+class SpamGuard(RuiModule):
+	def initialize(self, **kwargs):
+		self.buffer = deque()
+
+	async def on_message(self, message : discord.Message):
+		message_hash = await SpamGuard.hash_message(message.content)
+		# etc
+
+modules: List[RuiModule] = [
+	RootTasks(context),
+	SpamGuard(context)
+]
+
+# Event Bindings
+@context.client.event
+async def on_ready():
+	await context.slash_tree.sync(guild=None)
+
+	for module in modules:
+		await module.on_ready()
+
+	print(f"Rui is online as {context.client.user}")
+
+@context.client.event
+async def on_message(message : discord.Message):
+	# Ignore messages Rui sent
+	if message.author == context.client.user:
+		return
+
+	for module in modules:
+		await module.on_message(message)
+```
+
+This design made Rui modular. Features could be added as independent components without modifying the core event loop. The spam guard, my personal logging commands, and other functionality all lived side by side as peers in the same system. It also made Rui easy to reason about: each module owned its own state and reacted to events independently, without needing to know about other modules.
+
+However, this architecture came with tradeoffs. Features were tightly coupled to the `RuiModule` contract, and extending Rui sometimes meant modifying the base class itself. As the system grew, the abstraction began to leak, and changes intended for one module could unintentionally affect others. What had started as a clean separation of concerns became a shared execution surface.
+
+Another key challenge was event fan-out. Every incoming message was forwarded to every module, and all of that work was coordinated by the same event loop. Even if individual operations were offloaded to worker threads, the event loop still had to schedule and await each step. As Rui grew, the amount of work performed for each message increased. The spam guard was no longer just observing events --- it was adding measurable overhead to Rui’s core execution flow.
+
 ### Moving to a Multithreaded Architecture
+
+As I mentioned earlier, I am more of a C++ developer and think in terms of threads. The single event loop model made all workloads compete for the same execution time, even when their priorities were very different. Slash commands needed to be responsive, statistics needed to be recorded at precise intervals, while spam detection and configuration updates could tolerate some delay. These workloads had fundamentally different latency requirements, but the single event loop forced them to compete equally.
+
+My first architectural shift was to isolate major subsystems into separate threads, each running its own asynchronous event loop. Message processing, slash commands, error reporting, configuration updates, and statistics aggregation were all separated. This ensured that delays in one subsystem would not interfere with others.
+
+The entry point for this architecture looked like this:
+
+#### main.py
+
+```python
+import asyncio
+import threading
+from collections.abc import Callable, Awaitable
+from procs.commands import main as commands
+from procs.config import main as config
+from procs.errors import main as errors
+from procs.messages import main as messages
+from procs.stats import main as stats
+
+def target_thread(ready: threading.Event, main: Callable[[threading.Event], Awaitable[None]]):
+	loop = asyncio.new_event_loop()
+	asyncio.set_event_loop(loop)
+	loop.run_until_complete(main(ready))
+
+async def run(main: Callable[[threading.Event], Awaitable[None]], timeout: float, label: str):
+	ready = threading.Event()
+	thread = threading.Thread(
+		target=target_thread,
+		args=(ready, main),
+		daemon=True
+	)
+	thread.start()
+	if not ready.wait(timeout=timeout):
+		raise RuntimeError(f"{label} failed to initialize in a timely manner")
+	print(f"{label} Initialized")
+
+async def main():
+	await run(errors, 5, "Error Handler")
+	await run(config, 5, "Mongo Listener")
+	await run(stats, 5, "Statistics Aggregator")
+	await run(commands, 5, "Commands Module")
+	await run(messages, 5, "Messages Module")
+
+if __name__ == '__main__':
+	asyncio.run(main())
+```
+
+Each subsystem ran independently in its own thread and event loop. The commands thread handled slash commands and user interaction. The messages thread handled spam detection and message analysis. The errors thread monitored exceptions and reported them to me via direct message. The stats thread aggregated metrics on a fixed schedule, and the config thread ran an HTTP server that allowed Rui’s web dashboard to notify the bot when server settings changed.
+
+As an example, the messages subsystem looked like this:
+
+#### procs/messages.py
+
+```python
+import discord
+import threading
+from dataclasses import dataclass
+from collections.abc import Callable, Awaitable
+from procs.errors import report_exception
+
+@dataclass
+class RuiMessageHandler:
+	name:       str
+	on_ready:   Callable[[],                Awaitable[None]]
+	on_message: Callable[[discord.Message], Awaitable[None]]
+
+async def main(ready: threading.Event):
+	INTENTS = discord.Intents.default()
+	INTENTS.message_content = True
+	INTENTS.guilds = True
+	INTENTS.messages = True
+	INTENTS.members = True
+
+	discord_client = discord.Client(intents=INTENTS)
+
+	from modules.scam_guard import register as scam_guard
+	handlers: list[RuiMessageHandler] = [
+		scam_guard(discord_client)
+	]
+
+	@discord_client.event
+	async def on_ready():
+		for handler in handlers:
+			await handler.on_ready()
+		ready.set()
+
+	@discord_client.event
+	async def on_message(message: discord.Message):
+		# Ignore messages Rui sent
+		if message.author == discord_client.user: return
+		for handler in handlers:
+			try:
+				await handler.on_message(message)
+			except Exception as err:
+				report_exception(f"{handler.name}.on_message", err)
+
+	from utils.discord import start
+	await start(discord_client)
+```
+
+Each subsystem followed the same pattern: its own Discord client, its own event loop, and its own isolated execution environment.
+
+This separation solved the original problem. Spam detection could run as slowly as needed without affecting command responsiveness. Background tasks like statistics collection and configuration updates no longer competed with user-facing functionality. However, this architecture introduced new problems.
+
+Each thread required its own Discord client, which meant maintaining multiple independent gateway connections to Discord. This increased memory usage and consumed additional gateway and API capacity. I began encountering rate limits more frequently, not because Rui was doing more work, but because that work was now spread across multiple clients.
+
+Sharing state between subsystems also had to follow careful, deliberate contracts. Each thread had its own event loop and its own Discord client, which meant asynchronous state could not be shared directly. Communication between subsystems, such as error reporting, required crossing event loop boundaries. This added coordination overhead and reduced architectural flexibility.
+
+This architecture solved the responsiveness problem, but it did so by fragmenting Rui into loosely connected subsystems. It increased operational complexity, introduced synchronization challenges, and consumed more system and API resources than anticipated. It was clear that I had traded one set of constraints for another, and that threading alone was not the right long-term architecture for Rui.
 
 ### Hitting Memory Limits and Profiling Failures
 
