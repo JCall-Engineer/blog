@@ -34,17 +34,15 @@ Their strength is automation. Their weakness is repetition.
 
 ## The First Attempt: Simple Hash Matching
 
-The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign.
+The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign. MD5 was a natural starting point. It’s simple, widely available, and one of the first hashing algorithms most developers encounter. But MD5 was designed for cryptographic integrity, not performance. It is both slower and weaker than modern alternatives, while offering guarantees Rui didn’t need in the first place.
 
-At the time, Rui was still primarily a personal data logging tool. Scam detection was an additional feature, not its core purpose. That meant detection logic ran on the same event loop as my slash commands. This worked, but it introduced a new problem. Rui was no longer as responsive as it used to be. Logging data began to feel slower, even with only a handful of servers under protection. Scam detection was competing for time with the very feature Rui had been built for.
-
-MD5 was a natural starting point. It’s simple, widely available, and one of the first hashing algorithms most developers encounter. But MD5 was designed for cryptographic integrity, not performance. It is both slower and weaker than modern alternatives, while offering guarantees Rui didn’t need in the first place.
-
-When cryptographic security isn’t required, non-cryptographic hash functions provide dramatically better performance while still producing reliable fingerprints. Switching to xxHash made an immediate difference. xxHash is designed for speed: it can hash a 50MB attachment in roughly 1.6 milliseconds, faster than the overhead of spawning a thread.
-
-This helped, but it didn’t solve the deeper problem. The bottleneck wasn’t just the hash function, it was the architecture. Detection was still running on the same event loop as everything else, which meant every message Rui analyzed delayed other tasks from executing.
+When cryptographic security isn’t required, non-cryptographic hash functions provide dramatically better performance while still producing reliable fingerprints. Switching to xxHash made an immediate difference. xxHash is designed for speed: it can hash a 50MB attachment in roughly 1.6 milliseconds, faster than the overhead of spawning a thread. This helped, but it didn’t solve the deeper problem. The bottleneck wasn’t just the hash function, it was the architecture. Detection was still running on the same event loop as everything else, which meant every message Rui analyzed delayed other tasks from executing.
 
 ## Converging on the Right Architecture
+
+When scam detection was added, it ran in the same event loop as everything else. Rui was built using Python’s asynchronous programming model: where a single event loop coordinates all tasks. Coroutines cooperate by voluntarily yielding control, rather than running in parallel. I offloaded the hash computation itself to a worker thread, but the detection pipeline still lived within the event loop. Each message required scheduling work, awaiting results, and updating internal state. The event loop was still responsible for coordinating every step. Detection remained tightly coupled to Rui’s core execution flow.
+
+This worked, but it introduced a new problem: Rui was no longer as responsive as it used to be, even while running in only a handful of servers: the ones I personally moderated and used for testing. Every message analyzed by the scam guard delayed other tasks from executing. Coming from a C++ background, where multithreading is the default tool for separating workloads, this felt like a natural limitation to work around rather than a design constraint to embrace. If Rui was going to scale beyond my personal use, this architecture wouldn’t hold. Scam detection needed to run without interfering with the responsiveness of user-facing commands.
 
 ### The Original OOP Event Override Model
 
