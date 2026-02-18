@@ -324,6 +324,124 @@ The underlying data structures still had more overhead than they needed, and thi
 
 ### Redesigning Data Structures for Efficiency
 
+The original audit structures were designed for correctness and traceability, not memory efficiency. They relied heavily on dictionaries, counters, and nested containers. While convenient, these abstractions carry significant hidden overhead. Every object stored its attributes in a per-instance dictionary, and every container introduced additional allocation, hashing, and bookkeeping costs.
+
+To reduce this overhead, I redesigned Rui’s core data structures as immutable, fixed-layout value objects:
+
+```python
+@dataclass(frozen=True, eq=False, slots=True)
+class AttachmentFingerprint:
+	filename: str
+	content_type: str
+	size: int
+	xhash: int | None
+	phash: str | None
+	_memory_size: int = field(init=False)
+
+@dataclass(frozen=True, eq=False, slots=True)
+class MessageFingerprint:
+	xhash: int
+	shash: int
+	urlish: bool
+	attachments: tuple[AttachmentFingerprint, ...]
+	_memory_size: int = field(init=False)
+
+@dataclass(frozen=True, slots=True)
+class InterceptedAt:
+	timestamp: datetime
+	message_id: int
+	user_id: int
+	guild_id: int
+	channel_id: int
+	_memory_size: int = field(init=False)
+
+@dataclass(frozen=True, slots=True)
+class MessageLog:
+	whence: InterceptedAt
+	fingerprint: MessageFingerprint
+	_memory_size: int = field(init=False)
+```
+
+These structures use three important design choices:
+
+- `slots=True` eliminates the per-instance __dict__, reducing memory overhead and improving locality.
+- `frozen=True` makes each object immutable, ensuring its memory footprint never changes after creation.
+- Tuples instead of dynamic containers ensure predictable, compact layouts without hash table overhead.
+
+Together, these changes flattened Rui’s audit structures into a compact tree of immutable value objects with minimal allocator overhead. However, these fingerprint and log objects do not exist in isolation. They are organized into higher-level runtime structures that track active scam investigations and recent message history on a per-guild basis:
+
+```python
+@dataclass(eq=False, slots=True)
+class Quarantine:
+	user_id: int
+	confidence: float
+	raw: RawMessage
+	reference: MessageLog
+	comparisons: set[MessageLog]
+	decisions: dict[MessageLog, MatchDecision]
+	actionable_channels: set[int]
+	_counter: float = field(init=False)
+	_task: asyncio.Task = field(init=False)
+
+@dataclass(eq=False, slots=True)
+class Monitor:
+	active_quarantines: dict[int, Quarantine] = field(default_factory=dict)
+	message_window: deque[MessageLog] = field(default_factory=deque)
+	user_index: defaultdict[int, set[MessageLog]] = field(default_factory=lambda: defaultdict(set))
+```
+
+The `Monitor` acts as the root container for all scam detection state within a guild. It maintains a rolling window of recent messages, indexes messages by user for fast lookup, and tracks active quarantines for suspicious behavior. Because these structures reference immutable `MessageLog` and `MessageFingerprint` objects, their memory usage can be computed deterministically by adding their respective `_memory_size` properties.
+
+#### Memory Usage as a First-Class Property
+
+Instead of measuring memory externally, each immutable object computes its own footprint during initialization and stores it in `_memory_size`. Because these structures never change after creation, this value remains valid for the lifetime of the object.
+
+For example, `MessageFingerprint` computes its total footprint by summing its own size and the sizes of its components:
+
+```python
+@dataclass(frozen=True, eq=False, slots=True)
+class MessageFingerprint:
+	xhash: int
+	shash: int
+	urlish: bool
+	attachments: tuple[AttachmentFingerprint, ...]
+	_memory_size: int = field(init=False)
+
+	def __post_init__(self):
+		# Base size of the instance container
+		total = sys.getsizeof(self)
+
+		total += sys.getsizeof(self.xhash)
+		total += sys.getsizeof(self.shash)
+		total += sys.getsizeof(self.urlish)
+		total += sys.getsizeof(self.attachments)
+
+		# Add size of each fingerprint object in the tuple
+		for attachment in self.attachments:
+			total += attachment._memory_size
+
+		# Add size of the integer object that will be assigned to _memory_size
+		total += MEMORY_SIZE
+
+		object.__setattr__(self, '_memory_size', total)
+```
+
+This transforms memory accounting from an expensive recursive traversal into a simple linear summation of `_memory_size` across live objects:
+
+```python
+def profile_scam_guard() -> Generator[tuple[int | None, int], None, None]:
+	total_size = sys.getsizeof(context.buffer)
+
+	for guild_id, monitor in context.buffer.items():
+		size = sys.getsizeof(guild_id) + monitor.getsizeof()
+		yield guild_id, size
+		total_size += size
+
+	yield None, total_size
+```
+
+Memory usage is now observable in real time, without recursion, graph traversal, or profiler overhead.
+
 ### Transitioning back to a Single-Threaded Async Architecture
 
 ### Making Rui Distributed
