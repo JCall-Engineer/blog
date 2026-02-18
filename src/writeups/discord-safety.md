@@ -223,9 +223,108 @@ This architecture solved the responsiveness problem, but it did so by fragmentin
 
 ### Hitting Memory Limits and Profiling Failures
 
-### Transitioning back to a Single-Threaded Async Architecture
+At this point, I was thinking seriously about Rui’s scalability and what it would cost to operate at larger scale. If Rui was going to grow beyond my personal use, I needed to understand how much memory each guild consumed. My scam detection pipeline stored audit state for every intercepted message, and those structures were designed for correctness and traceability, not efficiency. At the time, they looked like this:
+
+```python
+@dataclass(frozen=True)
+class AttachmentFingerprint:
+	filename: str
+	content_type: str  # e.g., "image/png"
+	size: int
+	hash: str | None  # None if too large to hash
+
+@dataclass
+class InterceptedMessage:
+	id: int = field(compare=False)
+	user: int
+	guild: int
+	channel: int = field(compare=False)
+	hashed_message: str
+	attachment_fingerprints: Counter[AttachmentFingerprint]
+
+class InterceptedCounter:
+	def __init__(self):
+		self.messages: list[InterceptedMessage] = []
+		self.deleted: list[InterceptedMessage] = []
+		self.guild_counts: Counter[int] = Counter()
+		self.channel_counts: Counter[int] = Counter()
+
+	def add(self, msg: InterceptedMessage):
+		self.messages.append(msg)
+		self.guild_counts[msg.guild] += 1
+		self.channel_counts[msg.channel] += 1
+		self.guilds   = ', '.join([MENTION_GUILD(gid)   if count == 1 else f"{MENTION_GUILD(gid)} (x{count})"   for gid, count in self.guild_counts.items()])
+		self.channels = ', '.join([MENTION_CHANNEL(cid) if count == 1 else f"{MENTION_CHANNEL(cid)} (x{count})" for cid, count in self.channel_counts.items()])
+
+@dataclass
+class InterceptedAudit:
+	identifier:      str
+	counter:         InterceptedCounter          = field(default_factory=InterceptedCounter, compare=False)
+	quarantined:     bool | None                               = field(default=None,         compare=False)
+	reported:        int  | None                               = field(default=None,         compare=False)
+	alerted:         set[int]                                  = field(default_factory=set,  compare=False)
+	audited:         int  | None                               = field(default=None,         compare=False)
+	networked:       list[int]                                 = field(default_factory=list, compare=False)
+	user:            int  | None                               = field(default=None,         compare=False)
+	message:         str  | None                               = field(default=None,         compare=False)
+	attachment_data: dict[AttachmentFingerprint, bytes | None] = field(default_factory=dict, compare=False)
+
+@dataclass
+class MessageLog:
+	timestamp: datetime = field(compare=False)
+	message: InterceptedMessage
+	audit: InterceptedAudit = field(compare=False)
+```
+
+This design made audits easy to reason about. Each intercepted message carried its own structured metadata, and audit state preserved everything needed to reconstruct what had happened. However, this came at a cost. These objects formed deep reference graphs, and audit state accumulated quickly under sustained message volume.
+
+To understand how serious the problem was, I wrote a recursive memory profiler to measure the true footprint of these structures:
+
+```python
+def sizeof(obj, seen=None) -> int:
+	"""Recursively calculate size of an object and its references"""
+	if seen is None:
+		seen = set()
+
+	obj_id = id(obj)  # Unique memory address
+	if obj_id in seen:
+		return 0  # Already counted this object
+
+	seen.add(obj_id)
+	size = sys.getsizeof(obj)  # Size of this object itself
+
+	# Now figure out what this object points to:
+
+	# 1. If it's a dict, recurse on keys and values
+	if isinstance(obj, dict):
+		size += sum(sizeof(k, seen) + sizeof(v, seen) for k, v in obj.items())
+
+	# 2. If it has __dict__ (custom class instances), recurse on that
+	elif hasattr(obj, '__dict__'):
+		size += sizeof(obj.__dict__, seen)
+
+	# 3. If it's iterable (list, tuple, deque, set), recurse on contents
+	elif hasattr(obj, '__iter__') and not isinstance(obj, (str, bytes, bytearray)):
+		try:
+			size += sum(sizeof(item, seen) for item in obj)
+		except TypeError:
+			pass  # Some iterables can't be iterated (like iterators that are exhausted)
+
+	# 4. If it has __slots__, we'd need to handle that too (I don't think I do)
+	return size
+```
+
+This function walks the full object graph, recursively measuring the size of dictionaries, lists, and custom objects while avoiding double-counting shared references.
+
+It was useful --- and dangerous.
+
+The irony is that the profiler itself could be heavier than the data it was measuring. The `seen` set grows with every object visited, and the recursive traversal adds stack frames and temporary allocations. On large buffers, that overhead could dominate the measurement and create memory spikes that looked like the system was ballooning, when in reality the profiler was doing most of the ballooning.
+
+The underlying data structures still had more overhead than they needed, and this profiling exercise made that visible. It also pushed me toward redesigning Rui around simpler, leaner structures that could self report their memory usage efficiently, which reduced the steady-state memory footprint by roughly 30%.
 
 ### Redesigning Data Structures for Efficiency
+
+### Transitioning back to a Single-Threaded Async Architecture
 
 ### Making Rui Distributed
 
