@@ -444,7 +444,232 @@ Memory usage is now observable in real time, without recursion, graph traversal,
 
 ### Transitioning back to a Single-Threaded Async Architecture
 
+This commit message captures the essence of this section perfectly.
+
+> Probably the most uncomfortable commit of my life
+
+Running multiple Discord clients across threads was not viable long term---even at just four guilds I was already hitting gateway and API limits. I had optimized for the wrong constraint, and progress necessitated a course correction. The multiple clients, threads, and subsystem boundaries had to collapse back into a single coherent runtime. There would be one Discord client, one event loop, and one place where events entered the system. It felt like a step backwards in structure, but it was a step forwards in correctness.
+
+It was also basically open-heart surgery, because it meant operating on the software’s foundations. I started by switching Discord event handling to an explicit registration model.
+
+```python
+discord_client: Final[discord.Client] = discord.Client(intents=intents())
+
+_message_handlers: list[Callable[[discord.Message], Awaitable[None]]] = []
+
+def on_message(handler: Callable[[discord.Message], Awaitable[None]]):
+	"""Simple decorator allowing multiple bindings for on_message"""
+	logger.info(f"Adding {handler.__name__} to on_message")
+	_message_handlers.append(handler)
+	return handler
+
+@discord_client.event
+async def on_message(message):
+	if _is_shutting_down: return
+	if message.author == discord_client.user: return
+	for handler in _message_handlers:
+		_fire(handler.__name__, handler(message))
+```
+
+Yes, `discord_client` is a global in my Discord module, and that is intentional. It is accessed frequently, and wrapping it in class state would only add indirection without providing meaningful structure. At import time, functions decorated with `@on_message` register themselves as handlers. When the Discord event fires, the dispatcher invokes each registered handler in turn.
+
+At this point I also started thinking seriously about graceful shutdown. `_fire` wraps handlers so uncaught exceptions are reported, and it tracks active tasks so the bot can drain them during shutdown.
+
+```python
+async def _guarded(name: str, coro: Awaitable[Any]):
+	try:
+		await coro
+	except Exception as err:
+		await report_exception(name, err)
+
+def _fire(name: str, coro: Awaitable[Any]):
+	task = asyncio.create_task(_guarded(name, coro), name=name)
+	_active_tasks.add(task)
+	task.add_done_callback(_active_tasks.discard)
+
+async def _drain():
+	if _active_tasks:
+		await asyncio.gather(*_active_tasks, return_exceptions=True)
+
+async def discord_stop():
+	global _is_shutting_down
+	_is_shutting_down = True
+	await _drain() # Let active event handlers finish
+	from components.scam_guard.tracking import drain_quarantines
+	await drain_quarantines() # Let active quarantines finish
+
+async def discord_shutdown():
+	await discord_client.close()
+	if _client_task is not None:
+		_client_task.cancel()
+		try:
+			await _client_task
+		except asyncio.CancelledError:
+			pass
+```
+
+It also allows multiple handlers to run concurrently on the event loop, rather than forcing them to execute sequentially. This ensures slow handlers do not block unrelated work, preserving responsiveness while maintaining correctness.
+
+#### Separating Boot from Runtime
+
+Python’s asynchronous model draws a hard line between import time and execution time. No event loop exists until `asyncio.run()` is called, which means async code cannot execute during module initialization. This became a problem as Rui grew more modular. Components needed to perform asynchronous setup---connecting to services, registering handlers, and restoring state---but they also needed to declare periodic background tasks that would run for the lifetime of the process. These requirements span two distinct phases: one-time initialization and continuous runtime execution. To make this explicit, I built a scheduler with two phases: a boot phase for dependency-ordered async initialization, and a daemon phase for long-running background tasks.
+
+Python’s async model draws a hard line between import time and execution time: there is no running event loop until `asyncio.run()` starts one. As Rui became more modular, components needed to do async setup---connect to services, register handlers, restore state---and declare background tasks that should run for the lifetime of the process. Those are two different lifecycle phases. I made that explicit with a two-phase scheduler: a boot phase for dependency-ordered initialization, and a daemon phase for long-running background tasks.
+
+```python
+@dataclass(eq=False, slots=True)
+class BootLoader:
+	id: int = field(init=False)
+	func: BOOT_TASK
+	depends: set[BootLoader]
+	completed: asyncio.Event = field(default_factory=asyncio.Event, init=False, compare=False, hash=False)
+
+	def __post_init__(self):
+		self.id = context.PRIMARY_KEY
+		context.PRIMARY_KEY += 1
+		context.boot_tasks.add(self)
+
+	def ready(self):
+		return all(boot.completed.is_set() for boot in self.depends)
+
+	async def exec(self):
+		result = self.func()
+		if asyncio.iscoroutine(result):
+			await result
+		self.completed.set()
+
+@dataclass(eq=False, slots=True)
+class Daemon(ABC):
+	id: int = field(init=False)
+	task: DAEMON_TASK
+	asyncio_task: asyncio.Task[None] | None = field(init=False, default=None)
+
+	def __post_init__(self):
+		self.id = context.PRIMARY_KEY
+		context.PRIMARY_KEY += 1
+		context.daemon_tasks.add(self)
+
+	@abstractmethod
+	async def run(self) -> None:
+		raise NotImplementedError
+
+	async def _execute(self, timestamp: datetime) -> None:
+		try:
+			await self.task(timestamp)
+		except Exception as e:
+			await report_exception(f"{self.__class__.__name__}.{self.task.__name__} task raised exception at {timestamp}", e)
+```
+
+I have two kinds of `Daemon` which inherit from this class:
+
+- `IntervalDaemon` which does a simple `asyncio.sleep` between calling `self._execute`
+- `BoundaryDaemon` which waits until the next clock boundary so tasks run at precise, predictable times (for example, exactly at the top of each minute)
+
+And these get created and cataloged by the following function:
+
+```python
+@overload
+def schedule(func: BOOT_TASK, *, depends: set[BootLoader] | None = None, interval: None = None, boundary: None = None, start_immediately: None = None) -> BootLoader: ...
+@overload
+def schedule(func: DAEMON_TASK, *, interval: timedelta, start_immediately: bool = False, boundary: None = None, depends: None = None) -> IntervalDaemon: ...
+@overload
+def schedule(func: DAEMON_TASK, *, boundary: timedelta, interval: None = None, depends: None = None, start_immediately: None = None) -> BoundaryDaemon: ...
+
+def schedule(func: BOOT_TASK | DAEMON_TASK, *, depends: set[BootLoader] | None = None, boundary: timedelta | None = None, interval: timedelta | None = None, start_immediately: bool | None = False) -> BootLoader | IntervalDaemon | BoundaryDaemon:
+	match (depends, interval, boundary):
+		case (None, None, None):
+			return BootLoader(cast(BOOT_TASK, func), set())
+		case (set() as depends, None, None):
+			return BootLoader(cast(BOOT_TASK, func), depends)
+		case (None, timedelta() as interval, None):
+			return IntervalDaemon(cast(DAEMON_TASK, func), interval, bool(start_immediately))
+		case (None, None, timedelta() as boundary):
+			return BoundaryDaemon(cast(DAEMON_TASK, func), boundary)
+		case _:
+				raise RuntimeError("schedule(): only one of depends, interval, or boundary may be specified")
+```
+
+At runtime, `schedule()` just checks which keyword you provided---`depends`, `interval`, or `boundary`---and registers the function as either a boot task or a daemon. The overloads exist purely for the type checker: they make the “exactly one of these modes” contract explicit. `schedule()` also returns the handle so that boot time functions that must be loaded in a certain order can reference each other such as:
+
+```python
+async def wait_for_discord():
+	global _client_task
+	_client_task = asyncio.create_task(start_client())
+	await _ready_event.wait()
+
+async def handle_uncaught():
+	async def exception_handler(loop, context):
+		err = context.get('exception') or Exception(context.get('message', 'Unknown error'))
+		logger.error(f"Uncaught exception: {err}")
+		await report_exception("Event loop", err)
+	loop = asyncio.get_event_loop()
+	loop.set_exception_handler(exception_handler)
+
+DISCORD_READY = schedule(wait_for_discord, depends={CONFIG_LOADED, MONGO_CONNECTED, REDIS_CONNECTED, POSTGRES_CONNECTED})
+EXCEPTIONS_READY = schedule(handle_uncaught, depends={DISCORD_READY})
+```
+
 ### Making Rui Distributed
+
+As Rui’s responsibilities grew, it began competing for resources with the rest of my infrastructure. It was running on the same DigitalOcean droplet as my blog---alongside:
+
+- nginx
+- node.js express webserver
+- mongo
+- postgresql
+- redis
+- Rui
+
+This arrangement worked initially, but Rui’s workload was fundamentally different from everything else on that machine. Slash commands required low-latency responses and minimal processing, while scam detection required continuous analysis of every message across all guilds. These workloads had different scaling characteristics.
+
+This naturally divided Rui into two roles:
+
+- __Control plane__ — responding to slash commands and aggregating statistics
+- __Worker plane__ — processing guild messages and running the scam guard
+
+I moved the worker role onto a separate droplet, allowing message processing to scale independently from the control plane. Each instance is assigned a unique identifier via its configuration file:
+
+- __Instance 0__: control plane (slash commands, statistics aggregation)
+- __Instance 1__ (and future instances): worker plane (message processing and scam detection)
+
+To allow these instances to operate as a single system, I introduced a private network using Headscale. This allowed all instances to securely share access to MongoDB, PostgreSQL, and Redis without exposing those services publicly.
+
+Redis became the coordination layer. It tracks which instance is responsible for each guild and allows workers to lease and release guild responsibility dynamically. This ensures that each guild is processed by exactly one worker while allowing the system to scale horizontally as more workers are added.
+
+In practice, this level of distribution is unnecessary at Rui’s current scale. A single instance can comfortably handle thousands of guilds. But the architecture now supports horizontal scaling without requiring further structural changes. The only missing piece is a cost model that allows workers to balance load intelligently when leasing guilds.
+
+#### Preparing Rui for Horizontal Scaling
+
+Splitting Rui into multiple instances introduced a new problem: coordination. Each Discord Server (referred to as guild) must be processed by exactly one worker. If two instances process the same guild, duplicate alerts and inconsistent state could result. If no instance processes a guild, scams would go undetected.
+
+To solve this, I introduced a simple leasing system using Redis. Each instance periodically attempts to claim responsibility for guilds by acquiring short-lived leases. These leases expire automatically if the instance stops renewing them, allowing other instances to take over without manual intervention.
+
+The core of this mechanism is an atomic Redis operation:
+
+```lua
+local guild_key = KEYS[1]
+local instance_id = ARGV[1]
+local ttl = tonumber(ARGV[2])
+
+local current = redis.call('get', guild_key)
+if current then
+	return 0
+end
+
+redis.call('setex', guild_key, ttl, instance_id)
+return 1
+```
+
+This ensures that only one instance can claim a guild at a time. Each instance periodically:
+
+- discovers eligible guilds
+- attempts to claim unassigned guilds
+- renews leases for guilds it already owns
+- releases guilds that are no longer enabled
+
+At present, a single worker instance claims all guilds. This is intentional. The leasing mechanism exists to allow horizontal scaling when needed, but does not introduce complexity prematurely. Additional worker instances can be added without modifying the core architecture.
+
+The system is designed around a capacity abstraction, allowing each instance to limit how many guilds it accepts. At present this limit is fixed, and a single worker instance handles everything comfortably. But because leasing is capacity-driven, scaling horizontally becomes a matter of adding more instances rather than redesigning the system. In the future, capacity will be based on real resource usage such as memory and CPU usage.
 
 ## Architecture: Sliding Windows and Guild-Scoped Memory
 
