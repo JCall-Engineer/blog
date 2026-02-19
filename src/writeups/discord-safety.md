@@ -4,7 +4,7 @@ tags: [ projects, software ]
 draft: true
 ---
 
-## Rui's Origin: A personal tool for tracking data
+## Rui's Origin: A Personal Tool for Tracking Data
 
 I didn’t set out to build a Discord bot. With all the health challenges I’ve faced, one pattern became clear: improvement was always preceded by data collection. I discovered I had Circadian Rhythm Disorder *because* I started tracking my sleep. Instead of trying to explain my experience to a doctor, I could show them a graph:
 
@@ -34,7 +34,7 @@ Their strength is automation. Their weakness is repetition.
 
 ## The First Attempt: Simple Hash Matching
 
-The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign. MD5 was a natural starting point. It’s simple, widely available, and one of the first hashing algorithms most developers encounter. But MD5 was designed for cryptographic integrity, not performance. It is both slower and weaker than modern alternatives, while offering guarantees Rui didn’t need in the first place.
+The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign. MD5 was a natural starting point. It’s simple, widely available, and one of the first hashing algorithms most developers encounter. MD5 was designed for cryptographic integrity, not raw throughput. It is both slower and weaker than modern alternatives, while offering guarantees Rui didn’t need in the first place.
 
 When cryptographic security isn’t required, non-cryptographic hash functions provide dramatically better performance while still producing reliable fingerprints. Switching to xxHash made an immediate difference. xxHash is designed for speed: it can hash a 50MB attachment in roughly 1.6 milliseconds, faster than the overhead of spawning a thread. This helped, but it didn’t solve the deeper problem. The bottleneck wasn’t just the hash function, it was the architecture. Detection was still running on the same event loop as everything else, which meant every message Rui analyzed delayed other tasks from executing.
 
@@ -512,8 +512,6 @@ It also allows multiple handlers to run concurrently on the event loop, rather t
 
 #### Separating Boot from Runtime
 
-Python’s asynchronous model draws a hard line between import time and execution time. No event loop exists until `asyncio.run()` is called, which means async code cannot execute during module initialization. This became a problem as Rui grew more modular. Components needed to perform asynchronous setup---connecting to services, registering handlers, and restoring state---but they also needed to declare periodic background tasks that would run for the lifetime of the process. These requirements span two distinct phases: one-time initialization and continuous runtime execution. To make this explicit, I built a scheduler with two phases: a boot phase for dependency-ordered async initialization, and a daemon phase for long-running background tasks.
-
 Python’s async model draws a hard line between import time and execution time: there is no running event loop until `asyncio.run()` starts one. As Rui became more modular, components needed to do async setup---connect to services, register handlers, restore state---and declare background tasks that should run for the lifetime of the process. Those are two different lifecycle phases. I made that explicit with a two-phase scheduler: a boot phase for dependency-ordered initialization, and a daemon phase for long-running background tasks.
 
 ```python
@@ -695,8 +693,8 @@ The following two image sets were posted seconds apart across multiple channels:
 |----------------------------------------------|---------------------------------------------|
 | ![original attachment 1](@assets/scama1.jpg) | ![variant attachment 1](@assets/scamb1.jpg) |
 | ![original attachment 2](@assets/scama2.jpg) | ![variant attachment 2](@assets/scamb2.jpg) |
-| ![original attachment 2](@assets/scama3.jpg) | ![variant attachment 3](@assets/scamb3.jpg) |
-| ![original attachment 2](@assets/scama4.jpg) | ![variant attachment 4](@assets/scamb4.jpg) |
+| ![original attachment 3](@assets/scama3.jpg) | ![variant attachment 3](@assets/scamb3.jpg) |
+| ![original attachment 4](@assets/scama4.jpg) | ![variant attachment 4](@assets/scamb4.jpg) |
 
 To a human observer, they are indistinguishable. But their hashes were completely different:
 
@@ -720,7 +718,7 @@ The pixels had changed, but the structure had not. This is precisely the problem
 
 Exact hashes changed completely. Perceptual hashes barely changed at all. This allowed Rui to detect scam campaigns even when attackers deliberately modified images to evade exact fingerprint matching. Images with a Hamming distance of 10 or less can effectively be considered the same for purposes of scam campaign detection. In practice, legitimate unrelated images almost never fall within this range.
 
-Even though this is all I've observed thus far, attackers aren't strictly limited to modifying images. Text could also be altered slightly to evade exact matching. Detecting these variations required the same principle: fingerprints that preserve similarity rather than exact identity. To handle variation in text, I introduced SimHash, a locality-sensitive hash designed so similar inputs produce similar fingerprints. Here are some examples of phrases and their respective Hamming distance from the phrase "The quick brown fox jumps over the lazy dog", which has a SimHash of `0x2C2A1292084A8A8A`
+Even though this is all I've observed thus far, attackers aren't strictly limited to modifying images. Text could also be altered slightly to evade exact matching. Detecting these variations requires the same principle: fingerprints that preserve similarity rather than exact identity. To handle variation in text, I introduced SimHash, a locality-sensitive hash designed so similar inputs produce similar fingerprints. Here are some examples of phrases and their respective Hamming distance from the phrase "The quick brown fox jumps over the lazy dog", which has a SimHash of `0x2C2A1292084A8A8A`
 
 | Hamming Distance | Phrase                                          |
 |------------------|-------------------------------------------------|
