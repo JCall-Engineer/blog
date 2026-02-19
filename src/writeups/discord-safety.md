@@ -35,15 +35,15 @@ Their strength is automation. Their weakness is repetition.
 
 ## The First Attempt: Simple Hash Matching
 
-The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign. MD5 was a natural starting point. It’s simple, widely available, and one of the first hashing algorithms most developers encounter. MD5 was designed for cryptographic integrity, not raw throughput. It is both slower and weaker than modern alternatives, while offering guarantees Rui didn’t need in the first place.
+The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign. MD5 was a natural starting point---it's simple, widely available, and one of the first hashing algorithms most developers encounter. But it was designed for cryptographic integrity at a time when that meant different tradeoffs, and it shows its age: slower than modern alternatives, and with well-documented collision vulnerabilities that make it unsuitable even for the integrity checks it was built for. It offered guarantees Rui didn't need, and failed to offer the performance Rui did.
 
 When cryptographic security isn’t required, non-cryptographic hash functions provide dramatically better performance while still producing reliable fingerprints. Switching to xxHash made an immediate difference. xxHash is designed for speed: it can hash a 50MB attachment in roughly 1.6 milliseconds, faster than the overhead of spawning a thread. This helped, but it didn’t solve the deeper problem. The bottleneck wasn’t just the hash function, it was the architecture. Detection was still running on the same event loop as everything else, which meant every message Rui analyzed delayed other tasks from executing.
 
 ## Converging on the Right Architecture
 
-When scam detection was added, it ran in the same event loop as everything else. Rui was built using Python’s asynchronous programming model, where a single event loop coordinates all tasks. Coroutines cooperate by voluntarily yielding control, rather than running in parallel. I offloaded the hash computation itself to a worker thread, but the detection pipeline still lived within the event loop. Each message required scheduling work, awaiting results, and updating internal state. The event loop was still responsible for coordinating every step, and detection remained tightly coupled to Rui’s core execution flow.
+When scam detection was added, it ran in the same event loop as everything else. Rui was built using Python's asynchronous programming model, where a single event loop coordinates all tasks. Coroutines cooperate by voluntarily yielding control, rather than running in parallel. I offloaded the hash computation itself to a worker thread, but the detection pipeline still lived within the event loop---each message required scheduling work, awaiting results, and updating internal state, with the event loop responsible for coordinating every step.
 
-This worked, but it introduced a new problem: Rui was no longer as responsive as it used to be, even while running in only a handful of servers---the ones I personally moderated and used for testing. Every message analyzed by the scam guard delayed other tasks from executing. Coming from a C++ background, where multithreading is the default tool for separating workloads, this felt like a natural limitation to work around rather than a design constraint to embrace. If Rui was going to scale beyond my personal use, this architecture wouldn’t hold. Scam detection needed to run without interfering with the responsiveness of user-facing commands.
+This worked, but it introduced a new problem: Rui was no longer as responsive as it used to be, even while running in only a handful of servers---the ones I personally moderated and used for testing. Coming from a C++ background, where multithreading is the default tool for separating workloads, this felt like a natural limitation to work around rather than a design constraint to embrace. If Rui was going to scale beyond my personal use, this architecture wouldn’t hold. Scam detection needed to run without interfering with the responsiveness of user-facing commands.
 
 ### The Original OOP Event Override Model
 
@@ -69,7 +69,7 @@ class RuiModule:
 		pass
 
 	# Hook for modules to bind to discord.client.event.on_message
-	async def on_message(self, message : discord.Message):
+	async def on_message(self, message: discord.Message):
 		pass
 
 class SpamGuard(RuiModule):
@@ -96,7 +96,7 @@ async def on_ready():
 	print(f"Rui is online as {context.client.user}")
 
 @context.client.event
-async def on_message(message : discord.Message):
+async def on_message(message: discord.Message):
 	# Ignore messages Rui sent
 	if message.author == context.client.user:
 		return
@@ -815,7 +815,7 @@ Final enforcement decisions remain with the server’s moderators.
 
 ## The Funding Problem
 
-Running Rui isn't free. Here is a breakdown of my expenses to run Rui:
+Running Rui isn't free. Here is a breakdown of Rui's running costs:
 
 - Cloudflare Domain Name Registration: $27.18/year (est $2.27/mo)
 - Instance 0 - with automated backups: $7.20/month
@@ -827,7 +827,7 @@ This means Rui needs to generate at least $15.47/month to cover infrastructure c
 
 My first instinct was to price Rui proportionally to resource usage. Rui’s primary marginal per-guild cost is memory. Each guild maintains a rolling message buffer for similarity detection, and the size of that buffer scales with message rate and queue duration. A server that receives more messages, or retains them longer, consumes proportionally more RAM.
 
-Early measurements suggested a typical guild averaging 3 messages per minute with a 30-second queue used roughly 10 MB of memory. With my infrastructure costing $6/month for 1 GB of RAM, that implied a marginal cost of $6 \cdot \frac{10}{1000} = 0.06$ or about 6 cents per month per guild.
+Early measurements suggested a typical guild averaging 3 messages per minute with a 30-second queue used roughly 10 MB of memory. With my infrastructure costing $6/month for 1 GB of RAM, that implied a marginal cost of roughly $0.06 per guild per month.
 
 Charging fractions of a dollar per guild would be impractical, so I introduced an abstraction called a bite. One bite represented one message held in Rui’s in-memory queue. Since the number of messages in memory at any moment is approximately:
 
