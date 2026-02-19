@@ -853,6 +853,32 @@ I ultimately abandoned the bite system. It was a valid, dimensionally correct ab
 
 ### Rethinking Premium: Funding Through Support, Not Usage
 
+The bite system had been designed around a clean idea: price Rui proportionally to the resources it consumed. Memory was the primary marginal cost, and bites provided a precise, measurable unit that scaled naturally with usage. It was dimensionally correct, internally consistent, and grounded in physical reality.
+
+It was also solving the wrong problem.
+
+Further investigation revealed that Rui’s marginal cost per guild was negligible. The rolling message buffers that powered scam detection consumed far less memory than expected. Even at moderate message rates, their footprint was measured in at most tens of kilobytes---not megabytes---costing mere thousandths of a penny. The dominant costs were not tied to how many messages Rui processed, but to the infrastructure required for Rui to exist at all: the runtime, database connections, network coordination, monitoring, and the baseline resources required to operate reliably.
+
+The bite system optimized for marginal usage, but marginal usage was not the economic constraint.
+
+Rui’s real cost was continuity.
+
+Scam detection is only useful if it is present before the scam begins, remains active while it unfolds, and preserves the evidence needed to understand and respond afterward. This requires infrastructure that runs continuously, not infrastructure that spins up only when needed. Whether Rui protects five guilds or five hundred, it must maintain persistent connections, coordinate state, and remain ready to respond in real time.
+
+This changed how I thought about premium.
+
+Instead of pricing based on resource consumption, premium exists to fund sustainability. It allows Rui to operate reliably, to preserve forensic evidence beyond what is possible in memory alone, and to support investigation when attackers adapt in ways that automated detection cannot immediately catch.
+
+Premium provides three core capabilities:
+
+- __Investigation and Response.__ When a sophisticated scam campaign bypasses automated detection, I can analyze forensic evidence, reconstruct the attack, and refine Rui’s detection to prevent similar attacks in the future.
+- __Forensic Logging.__ Recently deleted messages are fingerprinted and preserved, ensuring missed attacks leave behind evidence that can be analyzed even after cleanup.
+- __Support for the Protection Network.__ Premium subscriptions fund the infrastructure and operational continuity required to keep Rui online and improving.
+
+Critically, core scam detection remains free. Premium does not gate protection—it funds its continued existence and strengthens Rui’s ability to adapt.
+
+The bite system had attempted to price Rui like a metered resource. In reality, Rui is infrastructure. Its value does not come from how much memory it consumes, but from its presence, its reliability, and its ability to respond when it matters.
+
 ### Premium Feature: Deleted Message Forensics
 
 ## Lessons Learned
