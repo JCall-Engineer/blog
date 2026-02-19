@@ -19,11 +19,11 @@ That graph changed the course of my life! It turned something subjective and har
 - Mood and symptoms
 - Accomplishments
 
-Rui started as a deeply personal tool to make data collection effortless. At the time, Rui had nothing to do with scam detection. That came later.
+Rui started as a deeply personal tool designed to make data collection effortless. At the time, Rui had nothing to do with scam detection. That came later.
 
 ## The Problem: One Account, Every Channel
 
-I moderate a handful of Discord servers of varying sizes. All of them have experienced periodic disturbances from scammers posting the same message in every channel. Sometimes this would happen while I was sleeping, leaving it to spread unchecked. At the time, Discord’s feature to delete a user’s recent messages when banning them would sometimes fail, making cleanup tedious and time-consuming. I had to go into each channel individually and delete the filth by hand.
+I moderate a handful of Discord servers of varying sizes. All of them have experienced periodic disturbances from scammers posting the same message in every channel. Sometimes this would happen while I was sleeping, allowing the scam to spread unchecked. At the time, Discord’s feature to delete a user’s recent messages when banning them would sometimes fail, making cleanup tedious and time-consuming. I had to go into each channel individually and clean up the mess by hand.
 
 After doing this for the third or fourth time, I began to think: "I have a Discord bot... I can do something about this!"
 
@@ -35,19 +35,19 @@ Their strength is automation. Their weakness is repetition.
 
 ## The First Attempt: Simple Hash Matching
 
-The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign. MD5 was a natural starting point---it's simple, widely available, and one of the first hashing algorithms most developers encounter. But it was designed for cryptographic integrity at a time when that meant different tradeoffs, and it shows its age: slower than modern alternatives, and with well-documented collision vulnerabilities that make it unsuitable even for the integrity checks it was built for. It offered guarantees Rui didn't need, and failed to offer the performance Rui did.
+The first version of scam detection was straightforward: compute an MD5 hash of each message and attachment, and compare those hashes against recent messages from the same user. If the same hashes appeared in multiple channels within a short window, it was likely a scam campaign. MD5 was a natural starting point---it's simple, widely available, and one of the first hashing algorithms most developers encounter. But it was designed for cryptographic integrity at a time when that meant different tradeoffs, and it shows its age: it is slower than modern alternatives and has well-documented collision vulnerabilities that make it unsuitable even for the integrity checks it was built for. It offered guarantees Rui didn't need, while failing to deliver the performance Rui required.
 
-When cryptographic security isn’t required, non-cryptographic hash functions provide dramatically better performance while still producing reliable fingerprints. Switching to xxHash made an immediate difference. xxHash is designed for speed: it can hash a 50MB attachment in roughly 1.6 milliseconds, faster than the overhead of spawning a thread. This helped, but it didn’t solve the deeper problem. The bottleneck wasn’t just the hash function, it was the architecture. Detection was still running on the same event loop as everything else, which meant every message Rui analyzed delayed other tasks from executing.
+When cryptographic security isn’t required, non-cryptographic hash functions provide dramatically better performance while still producing reliable fingerprints. Switching to xxHash made an immediate difference. xxHash is designed for speed. In local benchmarks on a DigitalOcean droplet running Python 3.13.5, hashing a 50 MB attachment took roughly 1.6 milliseconds---faster than thread scheduling overhead in CPython. This helped, but it didn’t solve the deeper problem. The bottleneck wasn’t just the hash function, it was the architecture. Detection was still running on the same event loop as everything else. Every message Rui analyzed delayed other tasks.
 
 ## Converging on the Right Architecture
 
-When scam detection was added, it ran in the same event loop as everything else. Rui was built using Python's asynchronous programming model, where a single event loop coordinates all tasks. Coroutines cooperate by voluntarily yielding control, rather than running in parallel. I offloaded the hash computation itself to a worker thread, but the detection pipeline still lived within the event loop---each message required scheduling work, awaiting results, and updating internal state, with the event loop responsible for coordinating every step.
+When scam detection was added, it ran in the same event loop as everything else. Rui was built using Python's asynchronous programming model, where a single event loop coordinates all tasks. Coroutines cooperate by voluntarily yielding control, allowing concurrency without parallel execution. I offloaded the hash computation itself to a worker thread, but the detection pipeline still lived within the event loop---each message required scheduling work, awaiting results, and updating internal state, with the event loop responsible for coordinating every step.
 
 This worked, but it introduced a new problem: Rui was no longer as responsive as it used to be, even while running in only a handful of servers---the ones I personally moderated and used for testing. Coming from a C++ background, where multithreading is the default tool for separating workloads, this felt like a natural limitation to work around rather than a design constraint to embrace. If Rui was going to scale beyond my personal use, this architecture wouldn’t hold. Scam detection needed to run without interfering with the responsiveness of user-facing commands.
 
 ### The Original OOP Event Override Model
 
-My original implementation was built on top of discord.py, which exposes Discord events like `on_ready` and `on_message` as coroutine hooks. Rather than binding all logic directly to those hooks, Rui treated the Discord client as shared context and passed it into a set of modules. Each module could override event handlers, and Rui would forward incoming events to every registered module. This effectively created a second event dispatch layer on top of discord.py’s native event system. The implementation looked something like this:
+My original implementation was built on top of discord.py, which exposes Discord events like `on_ready` and `on_message` as coroutine hooks. Rather than binding all logic directly to those hooks, Rui treated the Discord client as shared context and passed it into a set of modules. Each module could override event handlers, and Rui would forward incoming events to every registered module. This effectively created a second dispatch layer on top of discord.py’s native event system. The implementation looked something like this:
 
 ```python
 class RuiContext:
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 	asyncio.run(main())
 ```
 
-Each subsystem ran independently in its own thread and event loop. The commands thread handled slash commands and user interaction. The messages thread handled spam detection and message analysis. The errors thread monitored exceptions and reported them to me via direct message. The stats thread aggregated metrics on a fixed schedule, and the config thread ran an HTTP server that allowed Rui’s web dashboard to notify the bot when server settings changed.
+Each subsystem ran in its own thread, with its own event loop and isolated runtime. The commands thread handled slash commands and user interaction. The messages thread handled spam detection and message analysis. The errors thread monitored exceptions and reported them to me via direct message. The stats thread aggregated metrics on a fixed schedule, and the config thread ran an HTTP server that allowed Rui’s web dashboard to notify the bot when server settings changed.
 
 As an example, the messages subsystem looked like this:
 
@@ -214,9 +214,9 @@ async def main(ready: threading.Event):
 
 Each subsystem followed the same pattern: its own Discord client, its own event loop, and its own isolated execution environment.
 
-This separation solved the original problem. Spam detection could run as slowly as needed without affecting command responsiveness. Background tasks like statistics collection and configuration updates no longer competed with user-facing functionality. However, this architecture introduced new problems.
+This separation solved the original responsiveness problem. Spam detection could run as slowly as needed without affecting command responsiveness. Background tasks like statistics collection and configuration updates no longer competed with user-facing functionality. However, this introduced new problems.
 
-Each thread required its own Discord client, which meant maintaining multiple independent gateway connections to Discord. This increased memory usage and consumed additional gateway and API capacity. I began encountering rate limits more frequently, not because Rui was doing more work, but because that work was now spread across multiple clients.
+Each thread required its own Discord client, which meant maintaining multiple independent gateway sessions. Every client introduced its own heartbeat, event stream, and rate limit pressure, multiplying gateway load and increasing memory usage. Even at Rui’s small scale --- just a handful of guilds --- this architecture was already hitting Discord’s API and gateway limits. The system wasn’t merely inefficient; it was fundamentally incompatible with sustainable operation.
 
 Sharing state between subsystems also had to follow careful, deliberate contracts. Each thread had its own event loop and its own Discord client, which meant asynchronous state could not be shared directly. Communication between subsystems, such as error reporting, required crossing event loop boundaries. This added coordination overhead and reduced architectural flexibility.
 
@@ -445,7 +445,7 @@ Memory usage is now observable in real time, without recursion, graph traversal,
 
 ### Transitioning back to a Single-Threaded Async Architecture
 
-This commit message captures the essence of this section perfectly.
+My previous architecture worked, but it was fundamentally in conflict with the direction Rui needed to take. The commit message that marked its undoing captures the radical nature of its transition:
 
 > Probably the most uncomfortable commit of my life
 
@@ -621,7 +621,7 @@ As Rui’s responsibilities grew, it began competing for resources with the rest
 
 This arrangement worked initially, but Rui’s workload was fundamentally different from everything else on that machine. Slash commands required low-latency responses and minimal processing, while scam detection required continuous analysis of every message across all guilds. These workloads had different scaling characteristics.
 
-This naturally divided Rui into two roles:
+This naturally divided Rui into two architectural roles:
 
 - __Control plane__ --- responding to slash commands and aggregating statistics
 - __Worker plane__ --- processing guild messages and running the scam guard
@@ -845,7 +845,7 @@ This meant Rui’s marginal cost per guild was effectively negligible. A pricing
 
 More importantly, the complexity wasn’t buying anything. Even if the estimates had been accurate, the resulting costs would still have been measured in cents. The precision of the model created the illusion of economic significance. In reality, the per-guild cost was too small to meaningfully influence pricing decisions.
 
-I ultimately abandoned the bite system. It was a valid, dimensionally correct abstraction---but it solved the wrong problem. Rui’s real costs were driven by fixed infrastructure, redundancy, and operational reliability---not marginal per-guild memory usage. This realization forced me to rethink how Rui should be funded.
+I ultimately abandoned the bite system. It was a valid, dimensionally correct abstraction---but it solved the wrong problem. Rui’s real costs were driven by fixed infrastructure, redundancy, and operational reliability---not marginal per-guild memory usage. This realization forced me to rethink Rui’s funding model.
 
 ### Rethinking Premium: Funding Through Support, Not Usage
 
