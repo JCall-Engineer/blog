@@ -119,7 +119,7 @@ My first architectural shift was to isolate major subsystems into separate threa
 
 The entry point for this architecture looked like this:
 
-#### main.py
+#### `main.py`
 
 ```python
 import asyncio
@@ -163,7 +163,7 @@ Each subsystem ran independently in its own thread and event loop. The commands 
 
 As an example, the messages subsystem looked like this:
 
-#### procs/messages.py
+#### `procs/messages.py`
 
 ```python
 import discord
