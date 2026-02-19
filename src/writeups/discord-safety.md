@@ -623,8 +623,8 @@ This arrangement worked initially, but Rui’s workload was fundamentally differ
 
 This naturally divided Rui into two roles:
 
-- __Control plane__ — responding to slash commands and aggregating statistics
-- __Worker plane__ — processing guild messages and running the scam guard
+- __Control plane__ --- responding to slash commands and aggregating statistics
+- __Worker plane__ --- processing guild messages and running the scam guard
 
 I moved the worker role onto a separate droplet, allowing message processing to scale independently from the control plane. Each instance is assigned a unique identifier via its configuration file:
 
@@ -736,15 +736,120 @@ Even though this is all I've observed thus far, attackers aren't strictly limite
 
 ## Quarantine and Cleanup
 
+Initially, Rui acted based on a simple metric: if messages are equal then act. Introducing similarity-aware matching required a more nuanced decision model. In particular, some signals are stronger than others: attachments with a hamming distance less than 10 are a much clearer signal than minor variations in text. To reflect this reality I introduced a confidence rating system to Rui:
+
+| Signal                                                     | Message Text     | Image Attachments  | Non-Image Attachments  |
+|------------------------------------------------------------|------------------|--------------------|------------------------|
+| Identical: xxHash                                          | 1.00             | 1.00               | 1.00                   |
+| Similar: Hamming < 10 (simhash for text, pHash for images) | 0.70             | 0.95               | N/A                    |
+| Metadata: Same file type and size                          | N/A              | 0.60               | 0.60                   |
+
+These confidence values represent the strength of individual similarity signals. When both text and attachments are present, Rui further weights attachments at 70% and text at 30% when computing the final score. This means a text similarity confidence of 0.70 contributes only 0.21 (0.70 × 0.30) to the final decision when attachments exist. Rui computes confidence per message pair using these signals, then averages the results across recent messages to determine overall scam likelihood:
+
+```python
+def calculate_confidence(matches: list[MessageMatch | None]) -> float:
+	"""
+	Calculate confidence score for scam detection based on message similarity.
+
+	Algorithm rationale:
+	- AVERAGING vs MAX: We average quality scores across all message pairs to reduce
+	false positives. Legitimate users sometimes spam excitedly across channels
+	(e.g., posting same content in both manga and anime channels). Averaging means
+	legitimate variance lowers the score, while consistent spam patterns maintain
+	high confidence.
+
+	- ATTACHMENT WEIGHTING: Attachments are weighted 70% vs content 30% because
+	image similarity (phash) is a stronger scam signal than text similarity.
+	Scammers reuse varied images more consistently than varied text.
+
+	- URL BOOST: Messages with URLs get a 30% confidence boost since scam attacks
+	frequently include phishing/scam links.
+
+	- NONE HANDLING: Non-matching message pairs (None in matches list) contribute
+	0.0 to average, further reducing confidence when user has mixed legitimate
+	and suspicious messages.
+
+	Returns:
+	Confidence score between 0.0 and 1.0, where higher means more likely scam.
+	"""
+	quality_scores = []
+	for match in matches:
+		if match is None:
+			quality_scores.append(0.0)
+			continue
+
+		content_score = match.decision.content_status.confidence if match.decision.content_status else 0.0
+
+		# Boost content score if message contains URLs (common in scams)
+		if match.reference.fingerprint.urlish or match.comparison.fingerprint.urlish:
+			content_score = min(content_score * 1.3, 1.0)
+
+		attachment_score = 0.0
+		if match.decision.attachment_matches and len(match.decision.attachment_matches) > 0:
+			attachment_confidences = [am.status.confidence for am in match.decision.attachment_matches]
+			attachment_score = sum(attachment_confidences) / len(attachment_confidences)
+
+		if match.decision.attachment_matches and len(match.decision.attachment_matches) > 0:
+			# Weight attachments higher than content when attachments exist
+			combined_score = 0.7 * attachment_score + 0.3 * content_score
+		else:
+			# No attachments, rely purely on content similarity
+			combined_score = content_score
+
+		quality_scores.append(combined_score)
+
+	return sum(quality_scores) / len(quality_scores)
+```
+
+The exact values---whether for individual signal confidence, signal weighting, or action thresholds---are heuristic, chosen to reflect the relative strength of each signal and refined through observing real scam behavior. Image similarity is a stronger indicator than text similarity, while metadata matches provide weaker but still useful corroborating evidence.
+
+However, no detection system is perfect---false positives and false negatives are inevitable. Rui treats this as a fundamental design constraint rather than an edge case. It is designed for containment, not autonomous enforcement. Instead of issuing automated kicks or bans, it quarantines suspicious users via temporary timeouts and defers final judgment to human moderators.
+
+What Rui will do automatically:
+
+- Delete detected scam messages to prevent further spread
+- Upload a copy of the message to a moderator-facing audit channel
+- Temporarily timeout the user to contain potentially malicious activity
+
+Final enforcement decisions remain with the server’s moderators.
+
 ## The Funding Problem
 
-## The "Bites" System: Attempting Usage-Based Pricing
+Running Rui isn't free. Here is a breakdown of my expenses to run Rui:
 
-## Discovering I Was Wrong About Memory Usage
+- Cloudflare Domain Name Registration: $27.18/year (est $2.27/mo)
+- Instance 0 - with automated backups: $7.20/month
+- Instance 1 and each future instance: $6/mo
 
-## Rethinking Premium: Funding Through Support, Not Usage
+This means Rui needs to generate at least $15.47/month to cover infrastructure costs, in addition to compensating the time spent developing and maintaining it.
 
-## Premium Feature: Deleted Message Forensics
+### The "Bites" System: Attempting Usage-Based Pricing
+
+My first instinct was to price Rui proportionally to resource usage. Rui’s primary marginal per-guild cost is memory. Each guild maintains a rolling message buffer for similarity detection, and the size of that buffer scales with message rate and queue duration. A server that receives more messages, or retains them longer, consumes proportionally more RAM.
+
+Early measurements suggested a typical guild averaging 3 messages per minute with a 30-second queue used roughly 10 MB of memory. With my infrastructure costing $6/month for 1 GB of RAM, that implied a marginal cost of $\$6 \cdot \frac{10}{1000} = \$0.06$ or about 6 cents per month per guild.
+
+Charging fractions of a dollar per guild would be impractical, so I introduced an abstraction called a bite. One bite represented one message held in Rui’s in-memory queue. Since the number of messages in memory at any moment is approximately:
+
+$$\text{messages per minute} \cdot \frac{\text{queue duration}}{60}$$
+
+This provided a simple, usage-based unit that scaled naturally with load. Instead of billing directly for RAM, I could allocate bites and price them in larger, more manageable quantities. This allowed a subscription to fund multiple guilds, with bite limits determining overall capacity.
+
+In theory, this allowed Rui’s pricing to scale proportionally with actual infrastructure usage. In practice, the model depended heavily on accurate memory measurements and their interpretation.
+
+### Discovering I Was Wrong About Memory Usage
+
+Further investigation revealed that my initial memory estimates were off by orders of magnitude. The message queues themselves consumed far less memory than expected---likely closer to kilobytes than megabytes. The dominant costs were fixed overhead: the runtime, libraries, database connections, and baseline infrastructure required to operate reliably.
+
+This meant Rui’s marginal cost per guild was effectively negligible. A pricing model built around per-guild memory usage was optimizing for a resource that wasn't meaningfully scarce.
+
+More importantly, the complexity wasn’t buying anything. Even if the estimates had been accurate, the resulting costs would still have been measured in cents. The precision of the model created the illusion of economic significance. In reality, the per-guild cost was too small to meaningfully influence pricing decisions.
+
+I ultimately abandoned the bite system. It was a valid, dimensionally correct abstraction---but it solved the wrong problem. Rui’s real costs were driven by fixed infrastructure, redundancy, and operational reliability---not marginal per-guild memory usage. This realization forced me to rethink how Rui should be funded.
+
+### Rethinking Premium: Funding Through Support, Not Usage
+
+### Premium Feature: Deleted Message Forensics
 
 ## Lessons Learned
 
