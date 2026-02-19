@@ -449,9 +449,13 @@ My previous architecture worked, but it was fundamentally in conflict with the d
 
 > Probably the most uncomfortable commit of my life
 
-Running multiple Discord clients across threads was not viable long term---even at just four guilds I was already hitting gateway and API limits. I had optimized for the wrong constraint, and progress necessitated a course correction. The multiple clients, threads, and subsystem boundaries had to collapse back into a single coherent runtime. There would be one Discord client, one event loop, and one place where events entered the system. It felt like a step backwards in structure, but it was a step forwards in correctness.
+It was uncomfortable not because it was broken, but because, despite its flaws, it worked. I was performing open-heart surgery on a live system---dismantling a functional architecture and replacing the runtime model at its foundation, without the safety of incremental change.
 
-It was also basically open-heart surgery, because it meant operating on the software’s foundations. I started by switching Discord event handling to an explicit registration model.
+Running multiple Discord clients across threads was not viable long term---even at just four guilds I was already hitting gateway and API limits. I had optimized for the wrong constraint, and progress necessitated a course correction. The multiple clients, threads, and subsystem boundaries had to collapse back into a single coherent runtime.
+
+There would be one Discord client, one event loop, and one place where events entered the system. It felt like a step backwards in infrastructure, but it was a step forwards in correctness.
+
+I started by switching Discord event handling to an explicit registration model.
 
 ```python
 discord_client: Final[discord.Client] = discord.Client(intents=intents())
