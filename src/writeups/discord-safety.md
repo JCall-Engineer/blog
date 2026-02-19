@@ -827,7 +827,7 @@ This means Rui needs to generate at least $15.47/month to cover infrastructure c
 
 My first instinct was to price Rui proportionally to resource usage. Rui’s primary marginal per-guild cost is memory. Each guild maintains a rolling message buffer for similarity detection, and the size of that buffer scales with message rate and queue duration. A server that receives more messages, or retains them longer, consumes proportionally more RAM.
 
-Early measurements suggested a typical guild averaging 3 messages per minute with a 30-second queue used roughly 10 MB of memory. With my infrastructure costing $6/month for 1 GB of RAM, that implied a marginal cost of $\$6 \cdot \frac{10}{1000} = \$0.06$ or about 6 cents per month per guild.
+Early measurements suggested a typical guild averaging 3 messages per minute with a 30-second queue used roughly 10 MB of memory. With my infrastructure costing $6/month for 1 GB of RAM, that implied a marginal cost of $\\$6 \cdot \frac{10}{1000} = \\$0.06$ or about 6 cents per month per guild.
 
 Charging fractions of a dollar per guild would be impractical, so I introduced an abstraction called a bite. One bite represented one message held in Rui’s in-memory queue. Since the number of messages in memory at any moment is approximately:
 
