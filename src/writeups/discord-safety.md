@@ -673,7 +673,67 @@ The system is designed around a capacity abstraction, allowing each instance to 
 
 ## Architecture: Sliding Windows and Guild-Scoped Memory
 
+Scam campaigns unfold over very short time horizons. A compromised account will often post the same message across many channels within seconds. This burst of activity is what distinguishes coordinated spam from normal user behavior. Messages sent minutes or hours earlier are no longer relevant to identifying the campaign.
+
+This naturally leads to a sliding window model. Each guild maintains a rolling buffer of recent messages, allowing Rui to observe these bursts as they happen. As new messages arrive, older ones fall out of the window and are discarded. The window exists not as a performance optimization, but because scam campaigns themselves are temporally bounded events.
+
+This state is maintained independently for each guild in the `Monitor` structure introduced earlier. Each guild has its own rolling message history and active investigations, ensuring detection remains localized and memory usage remains proportional to recent activity rather than total lifetime activity.
+
 ## When Attackers Adapted: Moving from Exact Matching to Similarity Detection
+
+<style>
+table img {
+	width: 200px;
+}
+</style>
+
+At first, exact hashing worked well. Identical scam screenshots produced identical fingerprints. But attackers quickly adapted.
+
+The following two image sets were posted seconds apart across multiple channels:
+
+| Original                                     | Hue-shifted variant                         |
+|----------------------------------------------|---------------------------------------------|
+| ![original attachment 1](@assets/scama1.jpg) | ![variant attachment 1](@assets/scamb1.jpg) |
+| ![original attachment 2](@assets/scama2.jpg) | ![variant attachment 2](@assets/scamb2.jpg) |
+| ![original attachment 2](@assets/scama3.jpg) | ![variant attachment 3](@assets/scamb3.jpg) |
+| ![original attachment 2](@assets/scama4.jpg) | ![variant attachment 4](@assets/scamb4.jpg) |
+
+To a human observer, they are indistinguishable. But their hashes were completely different:
+
+| Original xxHash      | Variant xxHash       |
+|----------------------|----------------------|
+| `0x29a47899e1ac5e00` | `0xc542c6b3a7cad4b7` |
+| `0xf3fe806dcc8e7255` | `0xd1fe4a46ea8ae48f` |
+| `0xc7be8ae78cc8d483` | `0x57676a6be2dab5b7` |
+| `0x6e7fc0bc9e182291` | `0xd909e7a49e7866c2` |
+
+From Rui’s perspective, these were unrelated images. This was the moment exact matching stopped being sufficient.
+
+The pixels had changed, but the structure had not. This is precisely the problem perceptual hashing was designed to solve. Instead of hashing exact bytes, perceptual hashes encode visual structure. Small color shifts produce nearly identical fingerprints:
+
+| Original pHash       | Variant pHash        | Hamming Distance |
+|----------------------|----------------------|------------------|
+| `0xc0a381c5dcded4f8` | `0xc0a383c6dcded4d8` | 4                |
+| `0x94e29bc4a4a59aeb` | `0x94e29bc4a4a59aeb` | 0                |
+| `0x9ee1e19ec2cda0b2` | `0x9ee1e196c6cda0b2` | 2                |
+| `0x95956a69662d3627` | `0x91956a69662d6667` | 4                |
+
+Exact hashes changed completely. Perceptual hashes barely changed at all. This allowed Rui to detect scam campaigns even when attackers deliberately modified images to evade exact fingerprint matching. Images with a Hamming distance of 10 or less can effectively be considered the same for purposes of scam campaign detection. In practice, legitimate unrelated images almost never fall within this range.
+
+Even though this is all I've observed thus far, attackers aren't strictly limited to modifying images. Text could also be altered slightly to evade exact matching. Detecting these variations required the same principle: fingerprints that preserve similarity rather than exact identity. To handle variation in text, I introduced SimHash, a locality-sensitive hash designed so similar inputs produce similar fingerprints. Here are some examples of phrases and their respective Hamming distance from the phrase "The quick brown fox jumps over the lazy dog", which has a SimHash of `0x2C2A1292084A8A8A`
+
+| Hamming Distance | Phrase                                          |
+|------------------|-------------------------------------------------|
+|  0               | The quick brown fox jumps over the lazy dog     |
+|  8               | The quick brown fox jumped over the lazy dog    |
+|  9               | The quick brown fox leaps over the lazy dog     |
+|  5               | A quick brown fox jumps over the lazy dog       |
+|  9               | The fast brown fox jumps over the lazy dog      |
+| 10               | The quick brown fox jumps over a lazy dog       |
+|  9               | Quick brown fox jumps over lazy dog             |
+| 15               | The brown fox jumps over the dog                |
+| 34               | Free nitro discord gift link here               |
+| 33               | Completely different sentence about programming |
 
 ## Quarantine and Cleanup
 
