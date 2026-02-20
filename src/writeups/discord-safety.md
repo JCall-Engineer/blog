@@ -879,8 +879,26 @@ These do not replace Rui’s core function. They extend it. Automated detection 
 
 Like the threaded architecture before it, the bite model was a clean abstraction that optimized the wrong constraint. Moving beyond it allowed Rui’s design---and its premium offering---to reflect how the system actually operates.
 
-### Premium Feature: Deleted Message Forensics
+## Operating Rui as Real Infrastructure
 
-## Lessons Learned
+Up to this point, Rui had existed entirely as a personal project. It ran on my own infrastructure, protected the servers I moderated, and evolved in response to problems I encountered directly. Even as its architecture matured, it was still fundamentally informal.
 
-## What’s Next
+Introducing premium changed that.
+
+Handling payments carries a different set of responsibilities. Rui was no longer just software running on my machine---it became a service other communities would rely on. That meant operating it in a way that was structured, transparent, and above the table.
+
+To support that, I established JCall Engineer LLC as the entity responsible for operating Rui and any future services built on the same infrastructure. Rui became its first---and currently only---service offering. I obtained an EIN and worked with legal counsel to establish terms of service, creating a clear framework for operating Rui responsibly and sustainably.
+
+On the technical side, this also meant integrating a proper subscription system. I initially explored using PayPal, but its API did not provide the flexibility needed to support the subscription behavior Rui required. Stripe provided the primitives necessary to manage subscriptions cleanly and reliably, allowing Rui’s premium infrastructure to operate as part of the system itself rather than as an external, manual process.
+
+None of these changes altered Rui’s core function. They didn’t make it detect scams better or process messages faster. But they transformed Rui from something that existed informally into something that could operate continuously and responsibly over the long term.
+
+In the same way that Rui’s architecture evolved to align with the realities of Discord’s gateway and distributed operation, its operational structure now aligned with the realities of running infrastructure that other communities depend on.
+
+## What’s Next for Rui
+
+One area I have considered is maintaining a corpus of fingerprints for known scam campaigns. This would allow Rui to quarantine scams immediately, rather than waiting for them to spread across multiple channels before detection confidence rises. However, this introduces new challenges. Such a system would require careful curation, safeguards against false positives, and a reliable mechanism for keeping the dataset accurate and up to date. I have ideas, but nothing concrete enough that I am confident in deploying it yet.
+
+More broadly, I hope to expand Rui into as many communities as possible so it can establish a network of protection. Scammers who target one server could be identified and contained across the entire network, limiting their ability to reuse the same campaigns elsewhere. This has always been the long-term goal of Rui’s scam guard: not just to react to attacks, but to make them ineffective.
+
+In a sense, the ideal outcome is for Rui to make itself obsolete. A world where these scam campaigns no longer succeed is one where Rui is no longer needed. That may not be a conventional business objective, but for those of us who rely on Discord every day, it is the best outcome we could hope for.
