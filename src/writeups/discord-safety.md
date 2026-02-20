@@ -881,6 +881,8 @@ Like the threaded architecture before it, the bite model was a clean abstraction
 
 ## Operating Rui as Real Infrastructure
 
+Once premium was reframed around operational continuity rather than usage metering, it became clear that Rui could no longer operate informally. Accepting payments meant accepting responsibility—not just technically, but legally and structurally.
+
 Up to this point, Rui had existed entirely as a personal project. It ran on my own infrastructure, protected the servers I moderated, and evolved in response to problems I encountered directly. Even as its architecture matured, it was still fundamentally informal.
 
 Introducing premium changed that.
