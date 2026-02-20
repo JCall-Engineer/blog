@@ -851,33 +851,33 @@ More importantly, the complexity wasn’t buying anything. Even if the estimates
 
 I ultimately abandoned the bite system. It was a valid, dimensionally correct abstraction---but it solved the wrong problem. Rui’s real costs were driven by fixed infrastructure, redundancy, and operational reliability---not marginal per-guild memory usage. This realization forced me to rethink Rui’s funding model.
 
-### Rethinking Premium: Funding Through Support, Not Usage
+### Rethinking Premium: Value Beyond Usage
 
-The bite system had been designed around a clean idea: price Rui proportionally to the resources it consumed. Memory was the primary marginal cost, and bites provided a precise, measurable unit that scaled naturally with usage. It was dimensionally correct, internally consistent, and grounded in physical reality.
+The bite system made sense for the same reason the multithreaded architecture had made sense earlier. It was precise. It measured something real. It provided a clean abstraction grounded in a physical resource.
 
-It was also solving the wrong problem.
+And, like the threaded architecture, it was solving the wrong problem.
 
-Further investigation revealed that Rui’s marginal cost per guild was negligible. The rolling message buffers that powered scam detection consumed far less memory than expected. Even at moderate message rates, their footprint was measured in at most tens of kilobytes---not megabytes---costing mere thousandths of a penny. The dominant costs were not tied to how many messages Rui processed, but to the infrastructure required for Rui to exist at all: the runtime, database connections, network coordination, monitoring, and the baseline resources required to operate reliably.
+The bite model assumed that Rui's cost scaled with how much memory each guild consumed. That assumption was reasonable. Scam detection requires maintaining rolling message windows, and memory usage grows with message volume and retention time. Bites provided a way to measure that growth exactly.
 
-The bite system optimized for marginal usage, but marginal usage was not the economic constraint.
+But when I measured Rui’s actual memory usage in production, the results didn’t match the model.
 
-Rui’s real cost was continuity.
+The rolling message windows consumed very little memory. The dominant costs came from Rui itself: the runtime, persistent service connections, coordination infrastructure, and the baseline resources required for Rui to remain continuously online. Whether Rui protected one guild or one hundred, most of its cost remained unchanged.
 
-Scam detection is only useful if it is present before the scam begins, remains active while it unfolds, and preserves the evidence needed to understand and respond afterward. This requires infrastructure that runs continuously, not infrastructure that spins up only when needed. Whether Rui protects five guilds or five hundred, it must maintain persistent connections, coordinate state, and remain ready to respond in real time.
+This was the same mistake I had made with the threaded architecture. Threads had improved responsiveness by isolating workloads, but they worked against the structure of Discord’s gateway. They optimized for separation when the real constraint was coordination. The bite system made the same kind of error. It optimized for measuring usage when usage was not the defining constraint.
 
-This changed how I thought about premium.
+Rui’s cost was not driven by how much it processed. It was driven by the fact that it existed at all.
 
-Instead of pricing based on resource consumption, premium exists to fund sustainability. It allows Rui to operate reliably, to preserve forensic evidence beyond what is possible in memory alone, and to support investigation when attackers adapt in ways that automated detection cannot immediately catch.
+Once that became clear, the question was no longer how to meter Rui's usage, but what premium should represent.
 
-Premium provides three core capabilities:
+Core scam detection would remain available to everyone. Rui’s primary purpose is protection, and that protection is most effective when it is widely deployed. Premium would instead provide additional capabilities aligned with Rui’s investigative and operational role:
 
-- __Investigation and Response.__ When a sophisticated scam campaign bypasses automated detection, I can analyze forensic evidence, reconstruct the attack, and refine Rui’s detection to prevent similar attacks in the future.
 - __Forensic Logging.__ Recently deleted messages are fingerprinted and preserved, ensuring missed attacks leave behind evidence that can be analyzed even after cleanup.
+- __Investigation and Response.__ When a sophisticated scam campaign bypasses automated detection, I can analyze forensic evidence, reconstruct the attack, and refine Rui’s detection to prevent similar attacks in the future.
 - __Support for the Protection Network.__ Premium subscriptions fund the infrastructure and operational continuity required to keep Rui online and improving.
 
-Critically, core scam detection remains free. Premium does not gate protection—it funds its continued existence and strengthens Rui’s ability to adapt.
+These do not replace Rui’s core function. They extend it. Automated detection stops most attacks, but investigation, forensic preservation, and continuous improvement ensure that Rui becomes more effective over time.
 
-The bite system had attempted to price Rui like a metered resource. In reality, Rui is infrastructure. Its value does not come from how much memory it consumes, but from its presence, its reliability, and its ability to respond when it matters.
+Like the threaded architecture before it, the bite model was a clean abstraction that optimized the wrong constraint. Moving beyond it allowed Rui’s design---and its premium offering---to reflect how the system actually operates.
 
 ### Premium Feature: Deleted Message Forensics
 
