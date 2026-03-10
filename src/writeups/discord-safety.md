@@ -2,7 +2,6 @@
 title: "Rui: The Ongoing Battle Against Scam Campaigns on Discord"
 description: "How a personal health tracking bot became a scam detection system — and the architectural journey from simple hash matching to a distributed, similarity-aware pipeline protecting Discord servers."
 tags: [ projects, software ]
-draft: true
 ---
 
 ## Rui's Origin: A Personal Tool for Tracking Data
@@ -881,21 +880,9 @@ Like the threaded architecture before it, the bite model was a clean abstraction
 
 ## Operating Rui as Real Infrastructure
 
-Once premium was reframed around operational continuity rather than usage metering, it became clear that Rui could no longer operate informally. Accepting payments meant accepting responsibility—not just technically, but legally and structurally.
+Once premium was reframed around operational continuity, the implications extended beyond architecture. Accepting payments meant accepting responsibility in a domain I had never operated in before---not technical responsibility, where the constraints are legible and the feedback is immediate, but legal and structural responsibility, where doing things correctly is harder to verify and the cost of getting it wrong is less predictable. Up to this point, Rui had existed entirely as a personal project---informality that was fine when the only person depending on it was me, and wasn't fine when other communities would be paying to rely on it.
 
-Up to this point, Rui had existed entirely as a personal project. It ran on my own infrastructure, protected the servers I moderated, and evolved in response to problems I encountered directly. Even as its architecture matured, it was still fundamentally informal.
-
-Introducing premium changed that.
-
-Handling payments carries a different set of responsibilities. Rui was no longer just software running on my machine---it became a service other communities would rely on. That meant operating it in a way that was structured, transparent, and above the table.
-
-To support that, I established JCall Engineer LLC as the entity responsible for operating Rui and any future services built on the same infrastructure. Rui became its first---and currently only---service offering. I obtained an EIN and worked with legal counsel to establish terms of service, creating a clear framework for operating Rui responsibly and sustainably.
-
-On the technical side, this also meant integrating a proper subscription system. I initially explored using PayPal, but its API did not provide the flexibility needed to support the subscription behavior Rui required. Stripe provided the primitives necessary to manage subscriptions cleanly and reliably, allowing Rui’s premium infrastructure to operate as part of the system itself rather than as an external, manual process.
-
-None of these changes altered Rui’s core function. They didn’t make it detect scams better or process messages faster. But they transformed Rui from something that existed informally into something that could operate continuously and responsibly over the long term.
-
-In the same way that Rui’s architecture evolved to align with the realities of Discord’s gateway and distributed operation, its operational structure now aligned with the realities of running infrastructure that other communities depend on.
+I tried to do things the proper way. I established JCall Engineer LLC as the operating entity, obtained an EIN, evaluated payment processors, and settled on Stripe after PayPal's API proved too inflexible for the subscription behavior Rui required. The legal and operational work was slow and unfamiliar. I had help drafting the terms of service and privacy policy, but I read through every line myself multiple times, wanting to make sure I understood what I was agreeing to and what I was asking others to agree to. It was not my forte---I am more comfortable reasoning about hash functions than liability clauses---but the same instinct that drives me to get the technical details right wouldn't let me treat this any differently. If people were going to depend on Rui, I owed it to them to be as careful here as anywhere else.
 
 ## What’s Next for Rui
 
