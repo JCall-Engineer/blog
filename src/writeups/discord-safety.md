@@ -2,6 +2,7 @@
 title: "Rui: The Ongoing Battle Against Scam Campaigns on Discord"
 description: "How a personal health tracking bot became a scam detection system — and the architectural journey from simple hash matching to a distributed, similarity-aware pipeline protecting Discord servers."
 tags: [ projects, software ]
+date_effective: 2026-03-10
 ---
 
 ## Rui's Origin: A Personal Tool for Tracking Data
