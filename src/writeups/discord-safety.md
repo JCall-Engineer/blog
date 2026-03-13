@@ -891,4 +891,6 @@ One area I have considered is maintaining a corpus of fingerprints for known sca
 
 More broadly, I hope to expand Rui into as many communities as possible so it can establish a network of protection. Scammers who target one server could be identified and contained across the entire network, limiting their ability to reuse the same campaigns elsewhere. This has always been the long-term goal of Rui’s scam guard: not just to react to attacks, but to make them ineffective.
 
+If you'd like to be part of that network, [Rui is free to add to your server](https://rui.jcall.engineer).
+
 In a sense, the ideal outcome is for Rui to make itself obsolete. A world where these scam campaigns no longer succeed is one where Rui is no longer needed. That may not be a conventional business objective, but for those of us who rely on Discord every day, it is the best outcome we could hope for.
