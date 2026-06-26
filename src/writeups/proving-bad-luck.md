@@ -1265,7 +1265,7 @@ def constant_space_probability(start: Node, end: Node) -> Fraction:
 		# The multinomial coefficient counts the number of ways to arrange W, L, and T transitions in a sequence
 		# It is used instead of a simple permutation formula (nPm) because we are arranging repeated elements
 		total_edges = W_edges + L_edges + T_edges
-		multinomial = (factorial(total_edges) // 
+		multinomial = (factorial(total_edges) //
 						(factorial(W_edges) * factorial(L_edges) * factorial(T_edges)))
 
 		# All permutations of this path have the same probability
@@ -1976,7 +1976,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	function processNext() {
 		if (index >= calculators.length) return;
-		
+
 		const calc = document.querySelector(`[data-calculator="${calculators[index]}"]`);
 		if (calc) {
 			calc.dispatchEvent(new Event('submit', { cancelable: true }));
