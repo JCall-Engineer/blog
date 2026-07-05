@@ -259,7 +259,6 @@ The registry itself uses a different trick for a different problem. Every preset
 Percentage's basis points give four digits of precision after the decimal point, enough to express something like 33.33% precisely, without ever touching a float. But percentage exists for more than storage. FundOS needs to actually multiply a percentage against a currency, take 10% of a paycheck, split a remainder three ways, and that operation is where integer math gets dangerous if you're not careful.
 
 ```cpp
-
 /// Minimal contract for any type that scale() can operate on: must support negation, conversion to/from a raw 64-bit integer, and construction from one.
 /// Currently only fundos::currency conforms to this; the concept exists so scale() isn't hardcoded to one type,
 /// in case a future scalar (quantity, weight, etc.) needs the same percentage-scaling logic.
