@@ -151,7 +151,7 @@ It's good to think about what numbers can be represented when you're defining ty
 
 The design of `currency` actually went through a bigger shift than the final version suggests. My first pass made currency a template class, parameterized on a locale type constrained by a concept. That worked until I wanted to let users define a custom locale at runtime, a locale a user builds by picking their own separators and symbol placement rather than selecting a preset. A template parameter is fixed at compile time, so it can't hold something a user configures while the program is running.
 
-The fix was realizing `currency` didn't need the locale at all for anything except turning itself into a string. Addition, subtraction, comparison, none of that cares what symbol you use or where the decimal separator goes. Even the scale property of the locale --- how many minor units make up a major unit --- doesn't affect mathematical operations when you work in minor units. The math is identical no matter the locale. So instead of templating the whole type on a locale, currency stays a plain struct wrapping an `int64_t`, and only `to_string` and `from_string` accept a `currency_locale::spec` as a parameter. The locale becomes something currency briefly borrows to format itself, not something baked into its identity. And, naturally, having preset locale options *or* a custom locale makes a great use case for my new favorite C++ feature: `std::variant`.
+The fix was realizing `currency` didn't need the locale at all for anything except turning itself into a string. Addition, subtraction, comparison, none of that cares what symbol you use or even where the decimal separator goes. Even the scale property of the locale --- how many minor units make up a major unit --- doesn't affect mathematical operations when you work in minor units. The math is *identical* no matter the locale. So instead of templating the whole type on a locale, currency stays a plain struct wrapping an `int64_t`, and only `to_string` and `from_string` accept a `currency_locale::spec` as a parameter. The locale becomes something currency briefly borrows to format itself, not something baked into its identity. And, naturally, having preset locale options *or* a custom locale makes a great use case for my new favorite C++ feature: `std::variant`.
 
 ```cpp
 namespace fundos::currency_locale {
@@ -608,3 +608,29 @@ db::result<currency_locale::selection> db::get_currency_locale() {
 ```
 
 This function used to be the ugliest one in the codebase before I moved it over to `result<T>`, chaining through six or seven meta lookups, any one of which could fail for a different reason. Every early exit is just whichever thing was on hand at the time, a status passed straight through, a fresh outcome built with a specific message, or the actual value once every lookup succeeds, and the return type sorts out which is which without needing to construct an aggregate initializer.
+
+## Moving to the GUI
+
+Once the core library was in good enough shape to build against, I started on the Qt desktop client, and the first thing I reached for, instinctively, was a loading spinner. Something in a database-backed app just feels incomplete without one. But building it made me realize the spinner was pointless as things stood: every database call was running directly on the main thread, which also drives Qt's event loop. A spinner needs that event loop to keep running so it can actually paint, and a synchronous query blocks the loop entirely. The spinner would never render, it would just get torn down the instant the query returned.
+
+That pushed the database onto its own thread, communicating with the GUI purely through signals and slots. Once the database was async, it made sense to give the user a way to cancel a request that was taking too long, and SQLite already has an interrupt mechanism built in for exactly that. So I wired one up.
+
+Then I ran into a problem I hadn't expected: I could barely trigger it. My queries were finishing before I could click cancel. The core library was fast enough that the interrupt I'd built almost never had anything to interrupt.
+
+The actual slow part turned out to be the GUI itself, specifically widget construction. Loading a long transaction history means creating a widget per row, and that has to happen on the main thread no matter how fast the database behind it is. The real fix would be virtualizing the list, only constructing widgets for rows currently visible, but that's a significant rework of how the transaction views are built. I decided it wasn't worth it yet. The delay only shows up if someone selects a long timescale or imports a large OFX file, and even then it's a few seconds, not a freeze.
+
+I say all this a little sheepishly, because I don't particularly enjoy GUI work. The core library took about two months to build and the GUI took about one, so I wouldn't call it the smaller half of the project by any stretch. It was, however, the more enjoyable half by a wide margin.
+
+## A Note on Translations
+
+Locale awareness runs deeper in FundOS than just currency and percentage formatting. Every user-facing string in the Qt client goes through `tr()`, and I used numbered arguments, `%1`, `%2`, rather than string concatenation, specifically so a translator can reorder them to fit their language's grammar rather than being stuck with English word order. I don't want FundOS's usability to stop at whichever country I happen to live in.
+
+I'm not a translator myself, so the strings exist in English and nowhere else yet. But the scaffolding is there for anyone who wants to contribute a translation, and it was worth doing from the start rather than retrofitting later. Retrofitting translator-friendly strings into a codebase that wasn't built for them usually means finding every place someone concatenated a sentence out of fragments and untangling it, which is a much worse task than just doing it right the first time.
+
+## What's Next
+
+Android is still on the roadmap, Kotlin over JNI calling into the same core library that already runs the desktop client. But I'm taking a break from FundOS before I get there.
+
+The portfolio piece is done. The C++ core library is what I set out to build, and it's what I want in front of a hiring manager, not another JavaScript project, not a mobile app built through a JNI bridge. Job hunting is the more serious task in front of me now, and an Android client, however useful, doesn't add much to that particular case. It would say something else instead: that I can pick up a new language and a new platform and still ship something coherent. That's a real skill, and there's a version of this where I make that argument. But it's not the argument I need to make right now.
+
+FundOS will still be here when I'm ready to come back to it. For now, it's done the job I built it to do.
